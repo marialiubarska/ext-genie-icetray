@@ -41,8 +41,9 @@
 #include "Ntuple/NtpMCEventRecord.h"
 #include "Messenger/Messenger.h"
 #include "PDG/PDGCodes.h"
-#include "Utils/CmdLineArgParserUtils.h"
-#include "Utils/CmdLineArgParserException.h"
+// #include "Utils/CmdLineArgParserUtils.h" // outdated                                              
+// #include "Utils/CmdLineArgParserException.h" // outdated                                          
+#include "Utils/CmdLnArgParser.h" // new 
 
 using std::string;
 using namespace genie;
@@ -146,8 +147,10 @@ void GetCommandLineArgs(int argc, char ** argv)
 {
   LOG("myAnalysis", pINFO) << "Parsing commad line arguments";
 
+  CmdLnArgParser gOptInp(argc, argv);
+  
   // help?
-  bool help = genie::utils::clap::CmdLineArgAsBool(argc,argv,'h');
+  bool help = gOptInp.OptionExists('h');
   if(help) {
     PrintSyntax();
     exit(0);
@@ -156,9 +159,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // get input filename
   try {
     LOG("myAnalysis", pINFO) << "Reading event sample filename";
-    gOptInpFilename = utils::clap::CmdLineArgAsString(argc,argv,'f');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptInpFilename = gOptInp.ArgAsString('f');
+    // gOptInpFilename = utils::clap::CmdLineArgAsString(argc,argv,'f');
+  } catch(...) {
+    if(!gOptInp.OptionExists('f')) {
       LOG("myAnalysis", pFATAL) 
         << "Unspecified input filename - Exiting";
       PrintSyntax();
@@ -169,9 +173,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // get output filename
   try {
     LOG("myAnalysis", pINFO) << "Reading output filename";
-    gOptOutFilename = utils::clap::CmdLineArgAsString(argc,argv,'o');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptOutFilename = gOptInp.ArgAsString('o');
+    // gOptOutFilename = utils::clap::CmdLineArgAsString(argc,argv,'o');
+  } catch(...) {
+    if(!gOptInp.OptionExists('o')) {
       LOG("myAnalysis", pINFO) 
         << "Unspecified output filename - Will use hepevt.dat";
       gOptOutFilename="hepevt.dat";
@@ -181,9 +186,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // number of events to analyse
   try {    
     LOG("myAnalysis", pINFO) << "Reading number of events to analyze";
-    gOptNEvt = genie::utils::clap::CmdLineArgAsInt(argc,argv,'n');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptNEvt = gOptInp.ArgAsInt('n');
+    // gOptNEvt = genie::utils::clap::CmdLineArgAsInt(argc,argv,'n');
+  } catch(...) {
+    if(!gOptInp.OptionExists('n')) {
       LOG("myAnalysis", pINFO)
         << "Unspecified number of events to analyze - Use all";
       gOptNEvt = -1;
