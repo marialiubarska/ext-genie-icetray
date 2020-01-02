@@ -298,6 +298,8 @@ int main(int argc, char ** argv)
   return 0;
 }
 //___________________________________________________________________
+
+//___________________________________________________________________
 void GetCommandLineArgs(int argc, char ** argv)
 {
   LOG("myAnalysis", pINFO) << "Parsing commad line arguments";
@@ -310,8 +312,8 @@ void GetCommandLineArgs(int argc, char ** argv)
     //  CmdLnArgParser gOptInp(argc, argv);
     gOptInpFilename = gOptInp.ArgAsString('f');
     LOG("myAnalysis", pINFO) << "   " << gOptInpFilename;
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+  } catch(...) {
+    if(!gOptInp.OptionExists('f')) {
       LOG("myAnalysis", pFATAL) 
         << "Unspecified input filename - Exiting";
       exit(1);
@@ -323,8 +325,8 @@ void GetCommandLineArgs(int argc, char ** argv)
     LOG("myAnalysis", pINFO) << "Reading number of events to analyze";
     
     gOptNEvt = gOptInp.ArgAsInt('n');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+  } catch(...) {
+    if(!gOptInp.OptionExists('n')) {
       LOG("myAnalysis", pINFO)
         << "Unspecified number of events to analyze - Use all";
       gOptNEvt = -1;
