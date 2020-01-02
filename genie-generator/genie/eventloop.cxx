@@ -37,9 +37,10 @@
 #include "Ntuple/NtpMCEventRecord.h"
 #include "Messenger/Messenger.h"
 #include "PDG/PDGCodes.h"
-#include "Utils/CmdLineArgParserUtils.h"
-#include "Utils/CmdLineArgParserException.h"
-#include "Viewer/GHepPrinter.h"
+// #include "Utils/CmdLineArgParserUtils.h" // outdated
+// #include "Utils/CmdLineArgParserException.h" // outdated
+#include "Utils/CmdLnArgParser.h" // new 
+// #include "Viewer/GHepPrinter.h" // - do we need this??
 
 #include "TMath.h"
 #include "TH1D.h"
@@ -301,10 +302,13 @@ void GetCommandLineArgs(int argc, char ** argv)
 {
   LOG("myAnalysis", pINFO) << "Parsing commad line arguments";
 
+  CmdLnArgParser gOptInp(argc, argv);
+  
   // get GENIE event sample
   try {
     LOG("myAnalysis", pINFO) << "Reading event sample filename";
-    gOptInpFilename = utils::clap::CmdLineArgAsString(argc,argv,'f');
+    //  CmdLnArgParser gOptInp(argc, argv);
+    gOptInpFilename = gOptInp.ArgAsString('f');
     LOG("myAnalysis", pINFO) << "   " << gOptInpFilename;
   } catch(exceptions::CmdLineArgParserException e) {
     if(!e.ArgumentFound()) {
@@ -317,7 +321,8 @@ void GetCommandLineArgs(int argc, char ** argv)
   // number of events to analyse
   try {    
     LOG("myAnalysis", pINFO) << "Reading number of events to analyze";
-    gOptNEvt = genie::utils::clap::CmdLineArgAsInt(argc,argv,'n');
+    
+    gOptNEvt = gOptInp.ArgAsInt('n');
   } catch(exceptions::CmdLineArgParserException e) {
     if(!e.ArgumentFound()) {
       LOG("myAnalysis", pINFO)
