@@ -84,8 +84,9 @@
 #include "PDG/PDGUtils.h"
 #include "Utils/XSecSplineList.h"
 #include "Utils/StringUtils.h"
-#include "Utils/CmdLineArgParserUtils.h"
-#include "Utils/CmdLineArgParserException.h"
+// #include "Utils/CmdLineArgParserUtils.h" // outdated                                              
+// #include "Utils/CmdLineArgParserException.h" // outdated                                          
+#include "Utils/CmdLnArgParser.h" // new 
 
 #ifdef __GENIE_FLUX_DRIVERS_ENABLED__
 #ifdef __GENIE_GEOM_DRIVERS_ENABLED__
@@ -187,8 +188,9 @@ void GenerateEvents(void)
   NtpWriter ntpw(kDefOptNtpFormat, gOptRunNu);
   
   string fn_prefix="genie_ic";
-  ntpw.Initialize(fn_prefix.c_str());
-
+  ntpw.Initialize();
+  ntpw.CustomizeFilenamePrefix(fn_prefix.c_str());
+  
   //-- open output file to write weight_dict
   ostringstream wdic_filename;
   wdic_filename << fn_prefix  << "."
@@ -328,8 +330,10 @@ void GetCommandLineArgs(int argc, char ** argv)
 {
   LOG("gicevgen", pINFO) << "Parsing command line arguments";
 
-  // help?
-  bool help = genie::utils::clap::CmdLineArgAsBool(argc,argv,'h');
+  CmdLnArgParser gOptInp(argc, argv);
+
+  // help?                                                                                            
+  bool help = gOptInp.OptionExists('h');
   if(help) {
       PrintSyntax();
       exit(0);
@@ -338,9 +342,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // number of events:
   try {
     LOG("gicevgen", pINFO) << "Reading number of events to generate";
-    gOptNevents = genie::utils::clap::CmdLineArgAsInt(argc,argv,'n');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptNevents = gOptInp.ArgAsInt('n');
+    // gOptNevents = genie::utils::clap::CmdLineArgAsInt(argc,argv,'n');
+  } catch(...) {
+    if(!gOptInp.OptionExists('n')) {
       LOG("gicevgen", pINFO)
             << "Unspecified number of events to generate - Using default";
       gOptNevents = kDefOptNevents;
@@ -350,9 +355,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // run number:
   try {
     LOG("gicevgen", pINFO) << "Reading MC run number";
-    gOptRunNu = genie::utils::clap::CmdLineArgAsInt(argc,argv,'r');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptRunNu = gOptInp.ArgAsInt('r');
+    // gOptRunNu = genie::utils::clap::CmdLineArgAsInt(argc,argv,'r');
+  } catch(...) {
+    if(!gOptInp.OptionExists('r')) {
       LOG("gicevgen", pINFO) << "Unspecified run number - Using default";
       gOptRunNu = kDefOptRunNu;
     }
@@ -361,9 +367,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // flux functional form
   try {
     LOG("gicevgen", pINFO) << "Reading flux function";
-    gOptPowerLawIndex = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'f');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptPowerLawIndex = gOptInp.ArgAsDouble('f');
+    // gOptPowerLawIndex = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'f');
+  } catch(...) {
+    if(!gOptInp.OptionExists('f')) {
       LOG("gicevgen", pFATAL) << "Unspecified (negative of) spectral index";
       PrintSyntax();
       exit(1);
@@ -373,7 +380,8 @@ void GetCommandLineArgs(int argc, char ** argv)
   // neutrino energy:
   try {
     LOG("gicevgen", pINFO) << "Reading neutrino energy";
-    string nue = genie::utils::clap::CmdLineArgAsString(argc,argv,'e');
+    string nue = gOptInp.ArgAsString('e');
+    // string nue = genie::utils::clap::CmdLineArgAsString(argc,argv,'e');
 
     // is it just a range (comma separated set of values)
     if(nue.find(",") != string::npos) {
@@ -390,8 +398,8 @@ void GetCommandLineArgs(int argc, char ** argv)
       PrintSyntax();
       exit(1);
     }
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+  } catch(...) {
+    if(!gOptInp.OptionExists('e')) {
       LOG("gicevgen", pFATAL) << "Unspecified neutrino energy range - Exiting";
       PrintSyntax();
       exit(1);
@@ -401,9 +409,10 @@ void GetCommandLineArgs(int argc, char ** argv)
   // neutrino PDG code:
   try {
     LOG("gicevgen", pINFO) << "Reading neutrino PDG code";
-    gOptNuPdgCode = genie::utils::clap::CmdLineArgAsInt(argc,argv,'p');
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+    gOptNuPdgCode = gOptInp.ArgAsInt('p');
+    // gOptNuPdgCode = genie::utils::clap::CmdLineArgAsInt(argc,argv,'p');
+  } catch(...) {
+    if(!gOptInp.OptionExists('p')) {
       LOG("gicevgen", pFATAL) << "Unspecified neutrino PDG code - Exiting";
       PrintSyntax();
       exit(1);
@@ -413,7 +422,8 @@ void GetCommandLineArgs(int argc, char ** argv)
   // target mix (their PDG codes with their corresponding weights):
   try {
     LOG("gicevgen", pINFO) << "Reading target mix";
-    string stgtmix = genie::utils::clap::CmdLineArgAsString(argc,argv,'t');
+    string stgtmix = gOptInp.ArgAsString('t');
+    // string stgtmix = genie::utils::clap::CmdLineArgAsString(argc,argv,'t');
     gOptTgtMix.clear();
     vector<string> tgtmix = utils::str::Split(stgtmix,",");
     if(tgtmix.size()==1) {
@@ -438,8 +448,8 @@ void GetCommandLineArgs(int argc, char ** argv)
       }//tgtmix_iter
     }//>1
 
-  } catch(exceptions::CmdLineArgParserException e) {
-    if(!e.ArgumentFound()) {
+  } catch(...) {
+    if(!gOptInp.OptionExists('t')) {
       LOG("gicevgen", pINFO) << "Unspecified target mix - Using Default";
       gOptTgtMix.insert(map<int, double>::value_type(1000080160, 0.889));
       gOptTgtMix.insert(map<int, double>::value_type(1000010010, 0.111));
@@ -450,30 +460,34 @@ void GetCommandLineArgs(int argc, char ** argv)
   // radius of generation volume:
   try {
     LOG("gicevgen", pINFO) << "Reading radius of cylindrical generation volume";
-    gOptGenVolRadius = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'R');
-  } catch(exceptions::CmdLineArgParserException e) {
+    gOptGenVolRadius = gOptInp.ArgAsDouble('R');
+    // gOptGenVolRadius = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'R');
+  } catch(...) {
       LOG("gicevgen", pINFO) << "Unspecified radius - Using Default";
   }
 
   // depth of generation volume:
   try {
     LOG("gicevgen", pINFO) << "Reading depth of deneration volume center";
-    gOptGenVolDepth = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'D');
-  } catch(exceptions::CmdLineArgParserException e) {
+    gOptGenVolDepth = gOptInp.ArgAsDouble('D');
+    // gOptGenVolDepth = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'D');
+  } catch(...) {
       LOG("gicevgen", pINFO) << "Unspecified depth - Using Default";
   }
   // height of generation volume
   try {
     LOG("gicevgen", pINFO) << "Reading length of cylindrical generation volume";
-    gOptGenVolLength = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'L');
-  } catch(exceptions::CmdLineArgParserException e) {
+    gOptGenVolLength = gOptInp.ArgAsDouble('L');
+    // gOptGenVolLength = genie::utils::clap::CmdLineArgAsDouble(argc,argv,'L');
+  } catch(...) {
       LOG("gicevgen", pINFO) << "Unspecified length - Using Default";
   }
 
   // Minimum and maximum zenith angle
   try {
     LOG("gicevgen", pINFO) << "Reading zenith angles range in degrees";
-    string nuzen = genie::utils::clap::CmdLineArgAsString(argc,argv,'Z');
+    string nuzen = gOptInp.ArgAsString('Z');
+    // string nuzen = genie::utils::clap::CmdLineArgAsString(argc,argv,'Z');
 
     // is it just a value or a range (comma separated set of values)
     if(nuzen.find(",") != string::npos) {
@@ -490,7 +504,7 @@ void GetCommandLineArgs(int argc, char ** argv)
       PrintSyntax();
       exit(1);
     }
-  } catch(exceptions::CmdLineArgParserException e) {
+  } catch(...) {
     // Assume full range
     LOG("gicevgen", pINFO) << "No option found for zenith angles, using default [0,180] ";
     gOptNuZenithMin=0;
@@ -500,7 +514,8 @@ void GetCommandLineArgs(int argc, char ** argv)
   // Minimum and maximum azimuth angle
   try {
     LOG("gicevgen", pINFO) << "Reading azimuth angles range in degrees";
-    string nuaz = genie::utils::clap::CmdLineArgAsString(argc,argv,'A');
+    string nuaz = gOptInp.ArgAsString('A');
+    // string nuaz = genie::utils::clap::CmdLineArgAsString(argc,argv,'A');
 
     // is it just a value or a range (comma separated set of values)
     if(nuaz.find(",") != string::npos) {
@@ -517,7 +532,7 @@ void GetCommandLineArgs(int argc, char ** argv)
       PrintSyntax();
       exit(1);
     }
-  } catch(exceptions::CmdLineArgParserException e) {
+  } catch(...) {
     // Assume full range
     LOG("gicevgen", pINFO) << "No option found for azimuth angles, using default [0,360] ";
     gOptNuAzimuthMin=0;

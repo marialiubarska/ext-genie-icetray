@@ -83,6 +83,10 @@ public :
   const TLorentzVector & Momentum      (void) { return  fgP4;      }
   const TLorentzVector & Position      (void) { return  fgX4;      }
   bool                   End           (void) { return  false;     }
+  long int               Index         (void) { return 0; } // for now set to 0; new in R-2_12_8
+  void                   Clear            (Option_t * opt   ) {} // R-2_12_8
+  void                   GenerateWeighted (bool gen_weighted) {} // R-2_12_8
+
 
 private:
 
