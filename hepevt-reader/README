@@ -1,0 +1,22 @@
+This I3Module is a tool to read in gzipped files in HEPEVT format and converts the 
+events into an MCTree with events containing I3Particles. In order to run it you will
+need to add the lib directory to your PYTHONPATH:
+
+export PYTHONPATH=$PYTHONPATH:/location/hepevt-reader/lib
+
+for bash shells or the analogue for other shells.
+
+In the scripts/ subdirectory are example python icetray scripts showing how to 
+use it:
+
+GENIE-p1.py: basically read in hepevt.gz file, apply mmc, option -3, and write
+             out the physics frames
+
+GENIE-p2.py: take the output from p1, apply hit-maker and write out the events
+
+GENIE-p3.py: take output from p2, apply noise, pmt and dom simulator, and write 
+             out events
+
+
+run_all.sh: run all the 3 above scripts sequentially
+
