@@ -36,3 +36,5 @@ adapt changes for R-3_X_X to work with GH
 -----
 
 will it actually work without container??
+
+*how to make code GENIE version independent?*
