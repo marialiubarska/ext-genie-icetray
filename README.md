@@ -18,3 +18,8 @@ install GENIE-HEDIS (or use existing installation?? -- then need to be careful w
 adapt changes for R-3_X_X to work with GH
 
 ...
+
+
+-----
+
+will it actually work without container??
