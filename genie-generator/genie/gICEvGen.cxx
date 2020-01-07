@@ -82,6 +82,7 @@
 #include "Numerical/Spline.h"
 #include "PDG/PDGCodes.h"
 #include "PDG/PDGUtils.h"
+#include "Utils/AppInit.h" // new
 #include "Utils/XSecSplineList.h"
 #include "Utils/StringUtils.h"
 // #include "Utils/CmdLineArgParserUtils.h" // outdated                                              
@@ -161,8 +162,8 @@ int main(int argc, char ** argv)
   
   //-- Autoload splines (from the XML file pointed at the $GSPLOAD env. var.,
   //   if the env. var. has been set)
-  XSecSplineList * xspl = XSecSplineList::Instance();
-  xspl->AutoLoad();
+  // XSecSplineList * xspl = XSecSplineList::Instance();
+  // xspl->AutoLoad(); //
 
   //-- Generate neutrino events
   //
@@ -200,14 +201,16 @@ void GenerateEvents(void)
   wd_ofile = fopen(wdic_filename.str().c_str(),"w");
 
   //initialize cross section accessor
-  string xsec_file_root = "";
-  if (gSystem->Getenv("GSPLOAD")){
-      string xsec_file_xml = gSystem->Getenv("GSPLOAD");
-      LOG("gicevgen", pDEBUG) << "XML cross section spline file: " << xsec_file_xml;
-      size_t ppos = xsec_file_xml.find_last_of(".");
-      xsec_file_root = xsec_file_xml.substr(0,ppos) + ".root";
-      LOG("gicevgen", pDEBUG) << "ROOT cross section file name: " << xsec_file_root;
-  }
+  string xsec_file_root = "~/Software/genie_workspace/genie-generator/xsec_splines/GENIE_2_12_8_Water_splines.xml";
+  utils::app_init::XSecTable(xsec_file_root, false);
+  
+  // if (gSystem->Getenv("GSPLOAD")){
+  //     string xsec_file_xml = gSystem->Getenv("GSPLOAD");
+  //     LOG("gicevgen", pDEBUG) << "XML cross section spline file: " << xsec_file_xml;
+  //     size_t ppos = xsec_file_xml.find_last_of(".");
+  //     xsec_file_root = xsec_file_xml.substr(0,ppos) + ".root";
+  //     LOG("gicevgen", pDEBUG) << "ROOT cross section file name: " << xsec_file_root;
+  // }
 
   CrossSectionAccessor::GetMe()->SetCrossSectionFile(xsec_file_root.c_str());
 

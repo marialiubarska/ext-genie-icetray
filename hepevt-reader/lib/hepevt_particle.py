@@ -58,74 +58,75 @@ class HepEvtParticle:
         ''' Translate HepEvt particle to I3 particle
         '''
         i3part = dataclasses.I3Particle()
+        print 'finding out PDG code and setting paticle type...'
         if self.idhep == -11 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.EPlus)
+            i3part.type = dataclasses.I3Particle.ParticleType.EPlus
         elif self.idhep == 11 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.EMinus)
+            i3part.type = dataclasses.I3Particle.ParticleType.EMinus
         elif self.idhep == -12 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuEBar)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuEBar
         elif self.idhep == 12 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuE)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuE
         elif self.idhep == -13 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.MuPlus)
+            i3part.type = dataclasses.I3Particle.ParticleType.MuPlus
         elif self.idhep == 13 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.MuMinus)
+            i3part.type = dataclasses.I3Particle.ParticleType.MuMinus
         elif self.idhep == -14 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuMuBar)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuMuBar
         elif self.idhep == 14 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuMu)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuMu
         elif self.idhep == -15 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.TauPlus)
+            i3part.type = dataclasses.I3Particle.ParticleType.TauPlus
         elif self.idhep == 15 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.TauMinus)
+            i3part.type = dataclasses.I3Particle.ParticleType.TauMinus
         elif self.idhep == -16 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuTauBar)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuTauBar
         elif self.idhep == 16 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.NuTau)
+            i3part.type = dataclasses.I3Particle.ParticleType.NuTau
         elif self.idhep == 22 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.Gamma)
+            i3part.type = dataclasses.I3Particle.ParticleType.Gamma
         elif self.idhep == 111 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.Pi0)
+            i3part.type = dataclasses.I3Particle.ParticleType.Pi0
         elif self.idhep == 211 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.PiPlus)
+            i3part.type = dataclasses.I3Particle.ParticleType.PiPlus
         elif self.idhep == -211 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.PiMinus)
-            # not really correct but "closest" match
+            i3part.type = dataclasses.I3Particle.ParticleType.PiMinus
+        # not really correct but "closest" match
         elif self.idhep == 311 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.K0_Long)
-            # not really correct but "closest" match
+            i3part.type = dataclasses.I3Particle.ParticleType.K0_Long
+        # not really correct but "closest" match
         elif self.idhep == -311 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.K0_Short)
+            i3part.type = dataclasses.I3Particle.ParticleType.K0_Short
         elif self.idhep == 321 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.KPlus)
+            i3part.type = dataclasses.I3Particle.ParticleType.KPlus
         elif self.idhep == -321 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.KMinus)
+            i3part.type = dataclasses.I3Particle.ParticleType.KMinus
         elif self.idhep == 2112 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.Neutron)
+            i3part.type = dataclasses.I3Particle.ParticleType.Neutron
         elif self.idhep == 2212 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.PPlus) 
+            i3part.type = dataclasses.I3Particle.ParticleType.PPlus
         elif self.idhep == -2212 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.PMinus) 
+            i3part.type = dataclasses.I3Particle.ParticleType.PMinus
         elif self.idhep == 1000080160 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.O16Nucleus)
+            i3part.type = dataclasses.I3Particle.ParticleType.O16Nucleus
         # used for the sum of the hadronic particles    
         elif self.idhep == 99 :
-            i3part.SetType(dataclasses.I3Particle.ParticleType.Hadrons)
+            i3part.type = dataclasses.I3Particle.ParticleType.Hadrons
         else :
             print "Unknown particle with pdg ID: ", self.idhep
-            i3part.SetType(dataclasses.I3Particle.ParticleType.unknown)
+            i3part.type = dataclasses.I3Particle.ParticleType.unknown
                 
-        i3part.SetEnergy(self.phepe)
+        i3part.energy = self.phepe
                 
         ptot = sqrt(self.phepx**2 + self.phepy**2 + self.phepz**2)
         theta = 0
         if abs(ptot)>0 : theta = acos(self.phepz/ptot) * I3Units.radian 
         phi = atan2(self.phepy,self.phepx) * I3Units.radian 
         
-        i3part.SetThetaPhi(theta,phi)
-        i3part.SetPos(self.vhepx,self.vhepy,self.vhepz)
-        i3part.SetTime(self.vhept)
+        i3part.dir.set_theta_phi(theta,phi) 
+        i3part.pos = dataclasses.I3Position(self.vhepx,self.vhepy,self.vhepz)
+        i3part.time = self.vhept
 
-        i3part.SetLocationType(dataclasses.I3Particle.LocationType.InIce)
+        i3part.location_type = dataclasses.I3Particle.LocationType.InIce
         return i3part
 

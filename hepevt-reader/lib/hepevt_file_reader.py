@@ -45,6 +45,7 @@ class HEPEvtFileReaderModule(icetray.I3Module):
                            1.*I3Units.keV)
 
     def Configure(self):
+        print 'configuring...'
         self.filename = self.GetParameter('Filename')
         self.addhadronic = self.GetParameter('AddHadronic')
         self.attachtolepton = self.GetParameter('AttachAllToLepton')
@@ -52,11 +53,13 @@ class HEPEvtFileReaderModule(icetray.I3Module):
 
         ###
         # Open the file and keep a pointer as a "member variable"
-        ###        
+        ###       
+        print 'opening file:', self.filename
         self.f = gzip.open(self.filename,'rb')
+        print 'configuration complited!'
 
-    def Physics(self, frame):
-        
+    def DAQ(self, frame):
+        print 'starting physics stuff...'
         mctree = dataclasses.I3MCTree()
 
         ###
@@ -82,7 +85,7 @@ class HEPEvtFileReaderModule(icetray.I3Module):
         ###
         eventNumber = int(line.split()[0])
         numberParticles = int(line.split()[1])
-        #print eventNumber, numberParticles
+        
         ###
         #Hadronic sum, if required
         ###
@@ -115,7 +118,7 @@ class HEPEvtFileReaderModule(icetray.I3Module):
             line = self.f.readline()
             hep = HepEvtParticle()
             hep.ReadLine(line)
-            #hep.Print()
+#            hep.Print()
             particlelist.append(hep)
             if hep.isthep==0:
                 # save the index of the first lepton
@@ -150,16 +153,18 @@ class HEPEvtFileReaderModule(icetray.I3Module):
                 #
                 # in other cases just add all the particles
                 else :
+                    print 'addparticle=True'
                     addparticle=True
                     
                 if addparticle:
                     ind_prims_added.append(ip)
                     i3part = hep.GetI3Particle()
                     primI3PartList.append(i3part)
-                    mctree.AddPrimary(i3part)                
+                    mctree.add_primary(i3part)
         ###
         # Now find all the final state particles
         ###
+        print 'Now find all the final state particles...'
         for ind in range(len(particlelist)):
             heppart = particlelist[ind]
             # only consider final state particles
@@ -234,7 +239,7 @@ class HEPEvtFileReaderModule(icetray.I3Module):
                 continue
 
             fsI3Part = heppart.GetI3Particle()
-            mctree.AppendChild(primI3PartList[prind],fsI3Part)
+            mctree.append_child(primI3PartList[prind],fsI3Part)
 
         # Add sum of hadronic particle if requested, and if particles where added
         if self.addhadronic and nhadorigin>0 :
@@ -277,14 +282,16 @@ class HEPEvtFileReaderModule(icetray.I3Module):
                 print "Summed hadronic system will not be added to the MC tree"
 
             if prind>=0 :
-                mctree.AppendChild(primI3PartList[prind],fsI3parthadsum)
+                mctree.append_child(primI3PartList[prind],fsI3parthadsum)
                 
         #sim_services.I3GeoShifter.ShiftTree(frame,mctree)
         frame['I3MCTree'] = mctree
 
-        #add event id to the eventheader
-        evthdr = frame.Get('I3EventHeader')
-        evthdr.EventID=eventNumber
+        # #add event id to the eventheader
+        # #(AttributeError: *** The dynamism of this class has been disabled
+        # #*** Attribute (EventID) does not exist in class I3EventHeader)
+        # evthdr = frame.Get('I3EventHeader')
+        # evthdr.EventID=eventNumber
         
         self.PushFrame(frame)
 

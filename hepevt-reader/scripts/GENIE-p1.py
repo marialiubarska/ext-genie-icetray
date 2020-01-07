@@ -55,22 +55,22 @@ load("libdataclasses")
 load("libphys-services")
 load("libdataio")
 load("libsim-services")
-load("libmmc-icetray")
+# load("libmmc-icetray")
 
 tray = I3Tray()
 
-tray.AddService("I3JavaVMFactory","java")(
-    ("Options",[expandvars("-Djava.class.path=$I3_BUILD/lib/mmc.jar")])
-    )
+# tray.AddService("I3JavaVMFactory","java")(
+#     ("Options",[expandvars("-Djava.class.path=$I3_BUILD/lib/mmc.jar")])
+#     )
 
 tray.AddService("I3FileOMKey2MBIDFactory","omkey2mbid")(
     ("INFILE",expandvars("$I3_BUILD/phys-services/resources/doms.txt"))
     )
 
-tray.AddService("I3ReaderServiceFactory","gcd")(
-    ("filename",gcd_file),
-    ("OmitEvent",True)
-    )
+# tray.AddService("I3ReaderServiceFactory","gcd")(
+#     ("filename",gcd_file),
+#     ("OmitEvent",True)
+#     )
 
 tray.AddService("I3SPRNGRandomServiceFactory","sprngrandom")(
 	("NStreams",2),
@@ -78,11 +78,11 @@ tray.AddService("I3SPRNGRandomServiceFactory","sprngrandom")(
         ("StreamNum",1)
         )
 
-tray.AddService("I3MCTimeGeneratorServiceFactory","time-gen")(
-        ("Year",2008),
-        ("DAQTime",163165000000000000),
-        ("runnumber",runnum)
-        )
+# tray.AddService("I3MCTimeGeneratorServiceFactory","time-gen")(
+#         ("Year",2008),
+#         ("DAQTime",163165000000000000),
+#         ("runnumber",runnum)
+#         )
 
 tray.AddService("I3GeometrySelectorServiceFactory","geo-selector")(
      ("StringsToUse","1:86"),
@@ -90,10 +90,10 @@ tray.AddService("I3GeometrySelectorServiceFactory","geo-selector")(
     ("GeoSelectorName","IC80_DC6-Geo")
     )
 
-tray.AddModule("I3Muxer","muxer")(
-    ("GeometryService","IC80_DC6-Geo"),
-    ("eventservice","I3EventService")
-    )
+# tray.AddModule("I3Muxer","muxer")(
+#     ("GeometryService","IC80_DC6-Geo"),
+#     ("eventservice","I3EventService")
+#     )
 
 tray.AddModule("I3EventCounter","counter3")(
     ("nevents",events),
@@ -124,13 +124,13 @@ if addWeights:
 #    ("outputmctree","I3MCTreeCMC")
 #    )
 
-mmcmode = -3
-mmcopts = '-seed=1 -radius=1200 -length=1700'
-tray.AddModule("I3PropagatorMMC","mmc")(
-    ('rerr',"/dev/null"),
-    ('mode', mmcmode),
-    ('opts', mmcopts)
-    )
+# mmcmode = -3
+# mmcopts = '-seed=1 -radius=1200 -length=1700'
+# tray.AddModule("I3PropagatorMMC","mmc")(
+#     ('rerr',"/dev/null"),
+#     ('mode', mmcmode),
+#     ('opts', mmcopts)
+#     )
 
 tray.AddModule("I3Writer","writer")(
     ("streams",[icetray.I3Frame.Physics]),
