@@ -23,15 +23,10 @@ MYGENIE_LIBS := -L$(MYGENIE)/lib -lGenieDriversIceCube -lHelperClasses
 LIBRARIES  := $(GENIE_LIBS) $(LIBRARIES) $(CERN_LIBRARIES)  $(MYGENIE_LIBS)
 
 
-TGT =	eventloop \
-        hepevt_writer \
+TGT =	hepevt_writer \
 	gicevgen
 
 all: $(TGT)
-
-eventloop: FORCE
-	$(CXX) $(CXXFLAGS) -c eventloop.cxx $(INCLUDES)
-	$(LD) $(LDFLAGS) eventloop.o $(LIBRARIES) -o eventloop
 
 hepevt_writer: FORCE
 	$(CXX) $(CXXFLAGS) -c hepevt_writer.cxx $(INCLUDES)
@@ -49,7 +44,6 @@ purge: FORCE
 
 clean: FORCE
 	$(RM) *.o *~ core 
-	$(RM) eventloop
 	$(RM) gicevgen
 	$(RM) hepevt_writer
 
