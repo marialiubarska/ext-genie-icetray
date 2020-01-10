@@ -544,9 +544,9 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
 
   // neutrino flavor
-  if( parser.OptionExists('nu-type') ) {
+  if( parser.OptionExists("nu-type") ) {
     LOG("gevgen", pINFO) << "Reading neutrino type";
-    gOptFlavorString = parser.ArgAsString('nu-type');
+    gOptFlavorString = parser.ArgAsString("nu-type");
   } else {
     LOG("gevgen", pFATAL)
        << "Unspecified neutrino type - Exiting";
@@ -555,9 +555,9 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
   
   // nu/(nu+nubar) fraction
-  if( parser.OptionExists('nu-fraction') ) {
+  if( parser.OptionExists("nu-fraction") ) {
     LOG("gevgen", pINFO) << "Reading neutrino fraction";
-    gOptNuFraction = parser.ArgAsDouble('nu-fraction');
+    gOptNuFraction = parser.ArgAsDouble("nu-fraction");
   } else {
     LOG("gevgen", pFATAL)
        << "Unspecified neutrino fraction - Exiting";
@@ -566,9 +566,9 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
   
   // power law index for flux (gamma)
-  if( parser.OptionExists('gamma') ) {
+  if( parser.OptionExists("gamma") ) {
     LOG("gevgen", pINFO) << "Reading flux power law index";
-    gOptPowerLawIndex = parser.ArgAsDouble('gamma');
+    gOptPowerLawIndex = parser.ArgAsDouble("gamma");
   } else {
     LOG("gevgen", pFATAL)
        << "Unspecified flux power law index - Exiting";
@@ -577,7 +577,7 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
 
   // force SingleProbScale?
-  if( parser.OptionExists('force-singleprob-scale') ) {
+  if( parser.OptionExists("force-singleprob-scale") ) {
     LOG("gevgen", pINFO) << "Forcing single probability scale";
     gOptSingleProbScale = true;
   } else {
@@ -587,7 +587,7 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
 
   // calculate GENIE Systematic weights?
-  if( parser.OptionExists('enable-syst-weights') ) {
+  if( parser.OptionExists("enable-syst-weights") ) {
     LOG("gevgen", pINFO) << "GENIE systematic weights will be calculated";
     gOptSystWeights = true;
   } else {
