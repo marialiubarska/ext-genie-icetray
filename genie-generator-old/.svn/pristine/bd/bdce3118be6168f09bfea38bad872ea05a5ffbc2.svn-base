@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+#
+#  list of environment variables passed on by qsub:
+#    - runnum: run number
+#    - flavor: pdg_id neutrino
+#    - emin: minimum energy in GeV
+#    - emax: maximum energy in GV
+#    - expon: negative of spectral flux exponent
+#
+runnum_label=$runnum
+if [ $runnum -lt 10 ]; then
+    runnum_label="00000$runnum"
+elif [ $runnum -lt 100 ]; then
+    runnum_label="0000$runnum"
+elif [ $runnum -lt 1000 ]; then
+    runnum_label="000$runnum"
+elif [ $runnum -lt 10000 ]; then
+    runnum_label="00$runnum"
+elif [ $runnum -lt 100000 ]; then
+    runnum_label="0$runnum"
+fi
+
+if [ $flavor -eq 12 ]; then
+    flavor_label="nue"
+elif [ $flavor -eq -12 ]; then
+    flavor_label="anue"
+elif [ $flavor -eq 14 ]; then
+    flavor_label="num"
+elif [ $flavor -eq -14 ]; then
+    flavor_label="anum"
+elif [ $flavor -eq 16 ]; then
+    flavor_label="nut"
+elif [ $flavor -eq -16 ]; then
+    flavor_label="anut"
+else
+    echo "Unknown neutrino flavor id: $flavor"
+    exit
+fi
+
+genfname=genie_nut.$runnum.ghep.root
+newfname=genie_${flavor_label}_e-${expon}_er${emin}-${emax}_${runnum_label}.ghep.root
+hepevtfname=`basename $newfname | sed 's/ghep.root/hepevt/'`
+
+echo "Producing file $newfname"
+
+#exit
+source ~/share/setup_software.sh
+setup_genie
+
+genie_exec=$MYGENIE/genie/gicevgen
+
+export GSPLOAD=$MYGENIE/xsec_splines/gxspl-icecube-v2.6.0.xml
+
+echo "Using xsec file: $GSPLOAD"
+
+export GPRODMODE=YES
+export GMSGCONF=$MYGENIE/pbs/Messenger_batch.xml
+export GSEED=$runnum
+
+echo
+echo "Start gicevgen at " `date`
+echo $flavor
+
+$genie_exec -n 5000 -r $runnum -e $emin,$emax -p $flavor -f $expon -R 1200 -D 1950 -T 1000 -B 1000 
+
+# remove unnecessary output
+rm -f input-flux
+rm -f genie-mcjob-$runnum.status
+
+echo
+echo "Finished gicevgen at " `date`
+echo " Now convert the file to hepevt format"
+
+
+# rename output file
+#echo
+#echo $genfname
+#echo $newfname
+
+mv $genfname $newfname
+
+# make stdhep file
+convert_exec=$MYGENIE/test/hepevt_writer_i3 
+
+$convert_exec -f $newfname -o $hepevtfname
+
+gzip $hepevtfname
+

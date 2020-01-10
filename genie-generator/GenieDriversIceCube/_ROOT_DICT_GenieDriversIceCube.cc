@@ -38,6 +38,8 @@ namespace std {} using namespace std;
 
 // Header files passed as explicit arguments
 #include "GIceCubeDiffuseFlux.h"
+#include "GCylindPowerLawFlux.h"
+#include "GConstantDensityGeometryAnalyzer.h"
 #include "SimpleIceCubeGeomAnalyzer.h"
 
 // Header files passed via #pragma extra_include
@@ -108,7 +110,7 @@ namespace genie {
       inline ::ROOT::TGenericClassInfo *GenerateInitInstance()
       {
          static ::ROOT::TGenericClassInfo 
-            instance("genie::geometry", 0 /*version*/, "SimpleIceCubeGeomAnalyzer.h", 27,
+            instance("genie::geometry", 0 /*version*/, "GConstantDensityGeometryAnalyzer.h", 18,
                      ::ROOT::Internal::DefineBehavior((void*)0,(void*)0),
                      &geniecLcLgeometry_Dictionary, 0);
          return &instance;
@@ -128,119 +130,121 @@ namespace genie {
 }
 
 namespace ROOT {
-   static TClass *geniecLcLfluxcLcLGIceCubeDiffuseFlux_Dictionary();
-   static void geniecLcLfluxcLcLGIceCubeDiffuseFlux_TClassManip(TClass*);
-   static void delete_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p);
-   static void deleteArray_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p);
-   static void destruct_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p);
+   static TClass *geniecLcLfluxcLcLGCylindPowerLawFlux_Dictionary();
+   static void geniecLcLfluxcLcLGCylindPowerLawFlux_TClassManip(TClass*);
+   static void delete_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p);
+   static void deleteArray_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p);
+   static void destruct_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p);
 
    // Function generating the singleton type initializer
-   static TGenericClassInfo *GenerateInitInstanceLocal(const ::genie::flux::GIceCubeDiffuseFlux*)
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::genie::flux::GCylindPowerLawFlux*)
    {
-      ::genie::flux::GIceCubeDiffuseFlux *ptr = 0;
-      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::genie::flux::GIceCubeDiffuseFlux));
+      ::genie::flux::GCylindPowerLawFlux *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::genie::flux::GCylindPowerLawFlux));
       static ::ROOT::TGenericClassInfo 
-         instance("genie::flux::GIceCubeDiffuseFlux", "GIceCubeDiffuseFlux.h", 49,
-                  typeid(::genie::flux::GIceCubeDiffuseFlux), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &geniecLcLfluxcLcLGIceCubeDiffuseFlux_Dictionary, isa_proxy, 0,
-                  sizeof(::genie::flux::GIceCubeDiffuseFlux) );
-      instance.SetDelete(&delete_geniecLcLfluxcLcLGIceCubeDiffuseFlux);
-      instance.SetDeleteArray(&deleteArray_geniecLcLfluxcLcLGIceCubeDiffuseFlux);
-      instance.SetDestructor(&destruct_geniecLcLfluxcLcLGIceCubeDiffuseFlux);
+         instance("genie::flux::GCylindPowerLawFlux", "GCylindPowerLawFlux.h", 26,
+                  typeid(::genie::flux::GCylindPowerLawFlux), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &geniecLcLfluxcLcLGCylindPowerLawFlux_Dictionary, isa_proxy, 0,
+                  sizeof(::genie::flux::GCylindPowerLawFlux) );
+      instance.SetDelete(&delete_geniecLcLfluxcLcLGCylindPowerLawFlux);
+      instance.SetDeleteArray(&deleteArray_geniecLcLfluxcLcLGCylindPowerLawFlux);
+      instance.SetDestructor(&destruct_geniecLcLfluxcLcLGCylindPowerLawFlux);
       return &instance;
    }
-   TGenericClassInfo *GenerateInitInstance(const ::genie::flux::GIceCubeDiffuseFlux*)
+   TGenericClassInfo *GenerateInitInstance(const ::genie::flux::GCylindPowerLawFlux*)
    {
-      return GenerateInitInstanceLocal((::genie::flux::GIceCubeDiffuseFlux*)0);
+      return GenerateInitInstanceLocal((::genie::flux::GCylindPowerLawFlux*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::genie::flux::GIceCubeDiffuseFlux*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::genie::flux::GCylindPowerLawFlux*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 
    // Dictionary for non-ClassDef classes
-   static TClass *geniecLcLfluxcLcLGIceCubeDiffuseFlux_Dictionary() {
-      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::genie::flux::GIceCubeDiffuseFlux*)0x0)->GetClass();
-      geniecLcLfluxcLcLGIceCubeDiffuseFlux_TClassManip(theClass);
+   static TClass *geniecLcLfluxcLcLGCylindPowerLawFlux_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::genie::flux::GCylindPowerLawFlux*)0x0)->GetClass();
+      geniecLcLfluxcLcLGCylindPowerLawFlux_TClassManip(theClass);
    return theClass;
    }
 
-   static void geniecLcLfluxcLcLGIceCubeDiffuseFlux_TClassManip(TClass* ){
+   static void geniecLcLfluxcLcLGCylindPowerLawFlux_TClassManip(TClass* ){
    }
 
 } // end of namespace ROOT
 
 namespace ROOT {
-   static TClass *geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_Dictionary();
-   static void geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_TClassManip(TClass*);
-   static void delete_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p);
-   static void deleteArray_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p);
-   static void destruct_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p);
+   static TClass *geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_Dictionary();
+   static void geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_TClassManip(TClass*);
+   static void delete_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p);
+   static void deleteArray_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p);
+   static void destruct_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p);
 
    // Function generating the singleton type initializer
-   static TGenericClassInfo *GenerateInitInstanceLocal(const ::genie::geometry::SimpleIceCubeGeomAnalyzer*)
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::genie::geometry::GConstantDensityGeometryAnalyzer*)
    {
-      ::genie::geometry::SimpleIceCubeGeomAnalyzer *ptr = 0;
-      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::genie::geometry::SimpleIceCubeGeomAnalyzer));
+      ::genie::geometry::GConstantDensityGeometryAnalyzer *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::genie::geometry::GConstantDensityGeometryAnalyzer));
       static ::ROOT::TGenericClassInfo 
-         instance("genie::geometry::SimpleIceCubeGeomAnalyzer", "SimpleIceCubeGeomAnalyzer.h", 29,
-                  typeid(::genie::geometry::SimpleIceCubeGeomAnalyzer), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_Dictionary, isa_proxy, 0,
-                  sizeof(::genie::geometry::SimpleIceCubeGeomAnalyzer) );
-      instance.SetDelete(&delete_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer);
-      instance.SetDeleteArray(&deleteArray_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer);
-      instance.SetDestructor(&destruct_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer);
+         instance("genie::geometry::GConstantDensityGeometryAnalyzer", "GConstantDensityGeometryAnalyzer.h", 20,
+                  typeid(::genie::geometry::GConstantDensityGeometryAnalyzer), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_Dictionary, isa_proxy, 0,
+                  sizeof(::genie::geometry::GConstantDensityGeometryAnalyzer) );
+      instance.SetDelete(&delete_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer);
+      instance.SetDeleteArray(&deleteArray_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer);
+      instance.SetDestructor(&destruct_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer);
       return &instance;
    }
-   TGenericClassInfo *GenerateInitInstance(const ::genie::geometry::SimpleIceCubeGeomAnalyzer*)
+   TGenericClassInfo *GenerateInitInstance(const ::genie::geometry::GConstantDensityGeometryAnalyzer*)
    {
-      return GenerateInitInstanceLocal((::genie::geometry::SimpleIceCubeGeomAnalyzer*)0);
+      return GenerateInitInstanceLocal((::genie::geometry::GConstantDensityGeometryAnalyzer*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::genie::geometry::SimpleIceCubeGeomAnalyzer*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::genie::geometry::GConstantDensityGeometryAnalyzer*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 
    // Dictionary for non-ClassDef classes
-   static TClass *geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_Dictionary() {
-      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::genie::geometry::SimpleIceCubeGeomAnalyzer*)0x0)->GetClass();
-      geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_TClassManip(theClass);
+   static TClass *geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::genie::geometry::GConstantDensityGeometryAnalyzer*)0x0)->GetClass();
+      geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_TClassManip(theClass);
    return theClass;
    }
 
-   static void geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer_TClassManip(TClass* ){
+   static void geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer_TClassManip(TClass* ){
    }
 
 } // end of namespace ROOT
 
 namespace ROOT {
    // Wrapper around operator delete
-   static void delete_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p) {
-      delete ((::genie::flux::GIceCubeDiffuseFlux*)p);
+   static void delete_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p) {
+      delete ((::genie::flux::GCylindPowerLawFlux*)p);
    }
-   static void deleteArray_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p) {
-      delete [] ((::genie::flux::GIceCubeDiffuseFlux*)p);
+   static void deleteArray_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p) {
+      delete [] ((::genie::flux::GCylindPowerLawFlux*)p);
    }
-   static void destruct_geniecLcLfluxcLcLGIceCubeDiffuseFlux(void *p) {
-      typedef ::genie::flux::GIceCubeDiffuseFlux current_t;
+   static void destruct_geniecLcLfluxcLcLGCylindPowerLawFlux(void *p) {
+      typedef ::genie::flux::GCylindPowerLawFlux current_t;
       ((current_t*)p)->~current_t();
    }
-} // end of namespace ROOT for class ::genie::flux::GIceCubeDiffuseFlux
+} // end of namespace ROOT for class ::genie::flux::GCylindPowerLawFlux
 
 namespace ROOT {
    // Wrapper around operator delete
-   static void delete_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p) {
-      delete ((::genie::geometry::SimpleIceCubeGeomAnalyzer*)p);
+   static void delete_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p) {
+      delete ((::genie::geometry::GConstantDensityGeometryAnalyzer*)p);
    }
-   static void deleteArray_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p) {
-      delete [] ((::genie::geometry::SimpleIceCubeGeomAnalyzer*)p);
+   static void deleteArray_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p) {
+      delete [] ((::genie::geometry::GConstantDensityGeometryAnalyzer*)p);
    }
-   static void destruct_geniecLcLgeometrycLcLSimpleIceCubeGeomAnalyzer(void *p) {
-      typedef ::genie::geometry::SimpleIceCubeGeomAnalyzer current_t;
+   static void destruct_geniecLcLgeometrycLcLGConstantDensityGeometryAnalyzer(void *p) {
+      typedef ::genie::geometry::GConstantDensityGeometryAnalyzer current_t;
       ((current_t*)p)->~current_t();
    }
-} // end of namespace ROOT for class ::genie::geometry::SimpleIceCubeGeomAnalyzer
+} // end of namespace ROOT for class ::genie::geometry::GConstantDensityGeometryAnalyzer
 
 namespace {
   void TriggerDictionaryInitialization__ROOT_DICT_GenieDriversIceCube_Impl() {
     static const char* headers[] = {
 "GIceCubeDiffuseFlux.h",
+"GCylindPowerLawFlux.h",
+"GConstantDensityGeometryAnalyzer.h",
 "SimpleIceCubeGeomAnalyzer.h",
 0
     };
@@ -261,8 +265,8 @@ namespace {
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_Autoloading_Map;
-namespace genie{namespace flux{class __attribute__((annotate("$clingAutoload$GIceCubeDiffuseFlux.h")))  GIceCubeDiffuseFlux;}}
-namespace genie{namespace geometry{class __attribute__((annotate("$clingAutoload$SimpleIceCubeGeomAnalyzer.h")))  SimpleIceCubeGeomAnalyzer;}}
+namespace genie{namespace flux{class __attribute__((annotate("$clingAutoload$GCylindPowerLawFlux.h")))  GCylindPowerLawFlux;}}
+namespace genie{namespace geometry{class __attribute__((annotate("$clingAutoload$GConstantDensityGeometryAnalyzer.h")))  GConstantDensityGeometryAnalyzer;}}
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "_ROOT_DICT_GenieDriversIceCube dictionary payload"
@@ -273,13 +277,15 @@ namespace genie{namespace geometry{class __attribute__((annotate("$clingAutoload
 
 #define _BACKWARD_BACKWARD_WARNING_H
 #include "GIceCubeDiffuseFlux.h"
+#include "GCylindPowerLawFlux.h"
+#include "GConstantDensityGeometryAnalyzer.h"
 #include "SimpleIceCubeGeomAnalyzer.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
     static const char* classesHeaders[]={
-"genie::flux::GIceCubeDiffuseFlux", payloadCode, "@",
-"genie::geometry::SimpleIceCubeGeomAnalyzer", payloadCode, "@",
+"genie::flux::GCylindPowerLawFlux", payloadCode, "@",
+"genie::geometry::GConstantDensityGeometryAnalyzer", payloadCode, "@",
 nullptr};
 
     static bool isInitialized = false;

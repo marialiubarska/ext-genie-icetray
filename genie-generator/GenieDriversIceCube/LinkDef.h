@@ -8,7 +8,10 @@
 #pragma link C++ namespace genie::flux;
 #pragma link C++ namespace genie::geometry;
 
-#pragma link C++ class genie::flux::GIceCubeDiffuseFlux;
-#pragma link C++ class genie::geometry::SimpleIceCubeGeomAnalyzer;
+#pragma link C++ class genie::flux::GCylindPowerLawFlux;
+#pragma link C++ class genie::geometry::GConstantDensityGeometryAnalyzer;
+
+// #pragma link C++ class genie::flux::GIceCubeDiffuseFlux;
+// #pragma link C++ class genie::geometry::SimpleIceCubeGeomAnalyzer;
 
 #endif

@@ -10,7 +10,7 @@
 #define I3GENIESYSTWEIGHTS_H_INCLUDED
 
 #include "EVGCore/EventRecord.h"
-#include "genie-icetray/I3GENIEResultDict.h"
+// #include "genie-icetray/I3GENIEResultDict.h"
 #include "ReWeight/GReWeight.h"
 
 namespace genie { 
@@ -25,8 +25,8 @@ namespace genie {
     void Configure();
     
     // Calculate weights for one event, and add weights to genie result
-    void Calculate(const genie::EventRecord &event, 
-		   I3GENIEResultDict &gstMap);
+    void Calculate(const genie::EventRecord &event); 
+		   // I3GENIEResultDict &gstMap);
 
     // Set the list of systematics to calculate, by name (See GENIE GSyst.h)
     void SetSystematics(const std::vector<std::string>& systNames);
@@ -37,7 +37,7 @@ namespace genie {
   private:
     std::vector<std::string> systNames_; // List of systematic parameters
     std::vector<double> systSteps_; // Steps values for tweaking systematics
-    std::map<std::string, std::vector< boost::shared_ptr<genie::rew::GReWeight> > > systCalculators_; // References to systematic weight calculators
+    std::map<std::string, std::vector< genie::rew::GReWeight > > systCalculators_; // References to systematic weight calculators
   };
   
 };

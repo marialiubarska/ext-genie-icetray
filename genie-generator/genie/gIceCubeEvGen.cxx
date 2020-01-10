@@ -172,12 +172,9 @@
 #ifdef __GENIE_GEOM_DRIVERS_ENABLED__
 #define __CAN_GENERATE_EVENTS_USING_A_FLUX_OR_TGTMIX__
 // internal classes                                                                                 
-#include "GCylindPowerLawFlux.h"
-#include "GConstantDensityGeometryAnalyzer.h"
-#include "I3GENIESystWeights.h"
-// #include "FluxDrivers/GCylindTH1Flux.h"
-// #include "FluxDrivers/GMonoEnergeticFlux.h"
-// #include "Geo/PointGeomAnalyzer.h"
+#include "GenieDriversIceCube/GCylindPowerLawFlux.h"
+#include "GenieDriversIceCube/GConstantDensityGeometryAnalyzer.h"
+// #include "GenieDriversIceCube/I3GENIESystWeights.h"
 #endif
 #endif
 
@@ -200,27 +197,34 @@ GeomAnalyzerI * GeomDriver              (void);
 GFluxI *        FluxDriver              (void);
 #endif
 
-void GenerateEventsAtFixedInitState (void);
-
 //Default options (override them using the command line arguments):
-int           kDefOptNevents   = 0;       // n-events to generate
-NtpMCFormat_t kDefOptNtpFormat = kNFGHEP; // ntuple format
-Long_t        kDefOptRunNu     = 0;       // default run number
+Long_t        kDefOptRunNu          = 0;       // default run number
+NtpMCFormat_t kDefOptNtpFormat      = kNFGHEP; // ntuple format
+int           kDefOptNevents        = 0;       // n-events to generate
+double        kDefOptCylinderRadius = 1200.0;  // injection radius
+double        kDefOptCylinderLength = 2000.0;  // injection length
 
 //User-specified options:
-int             gOptNevents;      // n-events to generate
-double          gOptNuEnergy;     // neutrino E, or min neutrino energy in spectrum
-double          gOptNuEnergyRange;// energy range in input spectrum
-int             gOptNuPdgCode;    // neutrino PDG code
-map<int,double> gOptTgtMix;       // target mix (each with its relative weight)
-Long_t          gOptRunNu;        // run number
-string          gOptFlux;         //
-bool            gOptWeighted;     // 
-bool            gOptUsingFluxOrTgtMix = true;
-long int        gOptRanSeed;      // random number seed
-string          gOptInpXSecFile;  // cross-section splines
-string          gOptOutFileName;  // Optional outfile name
-string          gOptStatFileName; // Status file name, set if gOptOutFileName was set.
+Long_t          gOptRunNu;          // run number
+string          gOptOutFileName;    // Optional outfile name
+string          gOptStatFileName;   // Status file name, set if gOptOutFileName was set.
+int             gOptNevents;        // n-events to generate
+double          gOptNuEnergyMin;    // min neutrino energy
+double          gOptNuEnergyMax;    // max neutrino energy
+double          gOptZenithMin;      // min zenith
+double          gOptZenithMax;      // max zenith
+double          gOptAzimuthMin;     // min azimuth
+double          gOptAzimuthMax;     // max azimuth
+double          gOptCylinderRadius; // injection radius
+double          gOptCylinderLength; // injection length
+map<int,double> gOptTgtMix;         // target mix (each with its relative weight)
+string          gOptFlavorString;   // neutrino flavor (NuE, NuMu or NuTau)
+double          gOptNuFraction;     // nu/(nu+nubar) fraction
+double          gOptPowerLawIndex;  // flux power law index (gamma)
+bool            gOptSingleProbScale;// force single probability scale or not
+bool            gOptSystWeights;    // calculate GENIE systematic weights or not
+long int        gOptRanSeed;        // random number seed
+string          gOptInpXSecFile;    // cross-section splines
 
 //____________________________________________________________________________
 int main(int argc, char ** argv)
@@ -232,11 +236,10 @@ int main(int argc, char ** argv)
 #if defined(HAVE_FENV_H) && defined(HAVE_FEENABLEEXCEPT)
   feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 #endif
+  
   //
   // Generate neutrino events
   //
-
-  // if(gOptUsingFluxOrTgtMix) {
 #ifdef __CAN_GENERATE_EVENTS_USING_A_FLUX_OR_TGTMIX__
 	GenerateEventsUsingFluxOrTgtMix();
 #else
@@ -244,10 +247,9 @@ int main(int argc, char ** argv)
     << "\n   To be able to generate neutrino events from a flux and/or a target mix" 
     << "\n   you need to add the following config options at your GENIE installation:" 
     << "\n   --enable-flux-drivers  --enable-geom-drivers \n" ;
+  exit(2);
 #endif
-  // } else {
-  //    GenerateEventsAtFixedInitState();
-  // }
+  
   return 0;
 }
 //____________________________________________________________________________
@@ -262,75 +264,6 @@ void Initialize()
 
   // Set GHEP print level
   GHepRecord::SetPrintLevel(RunOpt::Instance()->EventRecordPrintLevel());
-}
-//____________________________________________________________________________
-void GenerateEventsAtFixedInitState(void)
-{
-  int neutrino = gOptNuPdgCode;
-  int target   = gOptTgtMix.begin()->first;
-  double Ev    = gOptNuEnergy;
-  TLorentzVector nu_p4(0.,0.,Ev,Ev); // px,py,pz,E (GeV)
-
-  // Create init state
-  InitialState init_state(target, neutrino);
-
-  // Create/config event generation driver 
-  GEVGDriver evg_driver;
-  evg_driver.SetEventGeneratorList(RunOpt::Instance()->EventGeneratorList());
-  evg_driver.SetUnphysEventMask(*RunOpt::Instance()->UnphysEventMask());
-  evg_driver.Configure(init_state);
-
-  // Initialize an Ntuple Writer
-  NtpWriter ntpw(kDefOptNtpFormat, gOptRunNu);
-
-  // If an output file name has been specified... use it
-  if (!gOptOutFileName.empty()){
-    ntpw.CustomizeFilename(gOptOutFileName);
-  }
-  ntpw.Initialize();
-
-
-  // Create an MC Job Monitor
-  GMCJMonitor mcjmonitor(gOptRunNu);
-  mcjmonitor.SetRefreshRate(RunOpt::Instance()->MCJobStatusRefreshRate());
-  
-  // If a status file name has been given... use it
-  if (!gOptStatFileName.empty()){
-    mcjmonitor.CustomizeFilename(gOptStatFileName);
-  }
-
-  
-  LOG("gevgen", pNOTICE) 
-    << "\n ** Will generate " << gOptNevents << " events for \n" 
-    << init_state << " at Ev = " << Ev << " GeV";
-
-  // Generate events / print the GHEP record / add it to the ntuple
-  int ievent = 0;
-  while (ievent < gOptNevents) {
-     LOG("gevgen", pNOTICE) 
-        << " *** Generating event............ " << ievent;
-
-     // generate a single event
-     EventRecord * event = evg_driver.GenerateEvent(nu_p4);
-
-     if(!event) {
-        LOG("gevgen", pNOTICE) 
-          << "Last attempt failed. Re-trying....";
-        continue;
-     }
-
-     LOG("gevgen", pNOTICE) 
-	<< "Generated Event GHEP Record: " << *event;
-
-     // add event at the output ntuple, refresh the mc job monitor & clean up
-     ntpw.AddEventRecord(ievent, event);
-     mcjmonitor.Update(ievent,event);
-     ievent++;
-     delete event;
-  }
-
-  // Save the generated MC events
-  ntpw.Save();
 }
 //____________________________________________________________________________
 
@@ -350,7 +283,7 @@ void GenerateEventsUsingFluxOrTgtMix(void)
   mcj_driver->UseGeomAnalyzer(geom_driver);
   mcj_driver->Configure();
   mcj_driver->UseSplines();
-  if(!gOptWeighted) 
+  if(gOptSingleProbScale) 
 	mcj_driver->ForceSingleProbScale();
 
   // Initialize an Ntuple Writer to save GHEP records into a TTree
@@ -404,7 +337,7 @@ GeomAnalyzerI * GeomDriver(void)
 
   GeomAnalyzerI * geom_driver =
     new geometry::GConstantDensityGeometryAnalyzer(gOptTgtMix,
-						   gOptCylinderLength); // add opt
+						   gOptCylinderLength);
   return geom_driver;
 }
 //____________________________________________________________________________
@@ -413,18 +346,20 @@ GFluxI * FluxDriver(void)
 // create power law flux driver (using internal flux driver)
 //
   GFluxI * flux_driver = new flux::GCylindPowerLawFlux(gOptFlavorString,
-						       gOptInjectionLength,
+						       gOptCylinderLength,
+						       gOptCylinderRadius,
 						       gOptPowerLawIndex,
-						       gOptMinEnergy,
-						       gOptMaxEnergy,
+						       gOptNuEnergyMin,
+						       gOptNuEnergyMax,
 						       gOptZenithMin,
 						       gOptZenithMax,
 						       gOptAzimuthMin,
 						       gOptAzimuthMax,
-						       gOptNuFraction); // add opt
+						       gOptNuFraction);
 
   return flux_driver;
 }
+#endif
 //____________________________________________________________________________
 void GetCommandLineArgs(int argc, char ** argv)
 {
@@ -443,16 +378,6 @@ void GetCommandLineArgs(int argc, char ** argv)
   if(help) {
       PrintSyntax();
       exit(0);
-  }
-
-  // number of events
-  if( parser.OptionExists('n') ) {
-    LOG("gevgen", pINFO) << "Reading number of events to generate";
-    gOptNevents = parser.ArgAsInt('n');
-  } else {
-    LOG("gevgen", pINFO)
-       << "Unspecified number of events to generate - Using default";
-    gOptNevents = kDefOptNevents;
   }
 
   // run number
@@ -477,25 +402,16 @@ void GetCommandLineArgs(int argc, char ** argv)
     gOptStatFileName .append(".status");
   }
 
-  // flux functional form
-  bool using_flux = false;
-  if( parser.OptionExists('f') ) {
-    LOG("gevgen", pINFO) << "Reading flux function";
-    gOptFlux = parser.ArgAsString('f');
-    using_flux = true;
+  // number of events
+  if( parser.OptionExists('n') ) {
+    LOG("gevgen", pINFO) << "Reading number of events to generate";
+    gOptNevents = parser.ArgAsInt('n');
+  } else {
+    LOG("gevgen", pWARN)
+       << "Unspecified number of events to generate - Using default";
+    gOptNevents = kDefOptNevents;
   }
-
-  if(parser.OptionExists('s')) {
-    LOG("gevgen", pWARN) 
-      << "-s option no longer available. Please read the revised code documentation";
-    gAbortingInErr = true;
-    exit(1);
-  }
-
-
-  // generate weighted events option (only relevant if using a flux)
-  gOptWeighted = parser.OptionExists('w');
-
+  
   // neutrino energy
   if( parser.OptionExists('e') ) {
     LOG("gevgen", pINFO) << "Reading neutrino energy";
@@ -509,18 +425,11 @@ void GetCommandLineArgs(int argc, char ** argv)
        double emin = atof(nurange[0].c_str());
        double emax = atof(nurange[1].c_str());
        assert(emax>emin && emin>=0);
-       gOptNuEnergy      = emin;
-       gOptNuEnergyRange = emax-emin;
-       if(!using_flux) {
-          LOG("gevgen", pWARN) 
-             << "No flux was specified but an energy range was input!";
-          LOG("gevgen", pWARN) 
-	     << "Events will be generated at fixed E = " << gOptNuEnergy << " GeV";
-	  gOptNuEnergyRange = -1;
-       }
+       gOptNuEnergyMin = emin;
+       gOptNuEnergyMax = emax;
     } else {
-       gOptNuEnergy       = atof(nue.c_str());
-       gOptNuEnergyRange = -1;
+       gOptNuEnergyMin = atof(nue.c_str());
+       gOptNuEnergyMax = gOptNuEnergyMin;
     }
   } else {
     LOG("gevgen", pFATAL) << "Unspecified neutrino energy - Exiting";
@@ -528,14 +437,74 @@ void GetCommandLineArgs(int argc, char ** argv)
     exit(1);
   }
 
-  // neutrino PDG code
-  if( parser.OptionExists('p') ) {
-    LOG("gevgen", pINFO) << "Reading neutrino PDG code";
-    gOptNuPdgCode = parser.ArgAsInt('p');
+  // zenith range
+  if( parser.OptionExists('z') ) {
+    LOG("gevgen", pINFO) << "Reading zenith angle range";
+    string zen = parser.ArgAsString('z');
+    
+    // is it just a value or a range (comma separated set of values)                                  
+    if(zen.find(",") != string::npos) {
+       // split the comma separated list                                                              
+       vector<string> zenrange = utils::str::Split(zen, ",");
+       assert(zenrange.size() == 2);
+       double zenmin = atof(zenrange[0].c_str());
+       double zenmax = atof(zenrange[1].c_str());
+       assert(zenmax>zenmin && zenmin>=0);
+       gOptZenithMin = zenmin;
+       gOptZenithMax = zenmax;
+    } else {
+       gOptZenithMin = atof(zen.c_str());
+       gOptZenithMax = gOptZenithMin;
+    }
   } else {
-    LOG("gevgen", pFATAL) << "Unspecified neutrino PDG code - Exiting";
+    LOG("gevgen", pFATAL) << "Unspecified zenith range - Exiting";
     PrintSyntax();
     exit(1);
+  }
+  
+  // azimuth range
+  if( parser.OptionExists('a') ) {
+    LOG("gevgen", pINFO) << "Reading azimuth angle range";
+    string az = parser.ArgAsString('a');
+
+    // is it just a value or a range (comma separated set of values)                                                                                                                                        
+    if(az.find(",") != string::npos) {
+       // split the comma separated list                                                                                                                                                                 
+       vector<string> azrange = utils::str::Split(az, ",");
+       assert(azrange.size() == 2);
+       double azmin = atof(azrange[0].c_str());
+       double azmax = atof(azrange[1].c_str());
+       assert(azmax>azmin && azmin>=0);
+       gOptAzimuthMin = azmin;
+       gOptAzimuthMax = azmax;
+    } else {
+       gOptAzimuthMin = atof(az.c_str());
+       gOptAzimuthMax = gOptAzimuthMin;
+    }
+  } else {
+    LOG("gevgen", pFATAL) << "Unspecified azimuth range - Exiting";
+    PrintSyntax();
+    exit(1);
+  }
+  
+  // injection cylinder radius 
+  if( parser.OptionExists('R') ) {
+    LOG("gevgen", pINFO) << "Reading injection cylinder radius";
+    gOptCylinderRadius = parser.ArgAsDouble('R');
+  } else {
+    LOG("gevgen", pWARN)
+       << "Unspecified injection radius - Using default";
+    gOptCylinderRadius = kDefOptCylinderRadius;
+  }
+  
+  // injection cylinder length
+  if( parser.OptionExists('L') ) {
+    LOG("gevgen", pINFO) << "Reading injection cylinder length";
+    gOptCylinderLength = parser.ArgAsDouble('L');
+  } else {
+    LOG("gevgen", pWARN)
+       << "Unspecified injection length - Using default";
+    gOptCylinderLength = kDefOptCylinderLength;
   }
 
   // target mix (their PDG codes with their corresponding weights)
@@ -574,14 +543,65 @@ void GetCommandLineArgs(int argc, char ** argv)
     exit(1);
   }
 
-  // gOptUsingFluxOrTgtMix = using_flux || using_tgtmix;
+  // neutrino flavor
+  if( parser.OptionExists('nu-type') ) {
+    LOG("gevgen", pINFO) << "Reading neutrino type";
+    gOptFlavorString = parser.ArgAsString('nu-type');
+  } else {
+    LOG("gevgen", pFATAL)
+       << "Unspecified neutrino type - Exiting";
+    PrintSyntax();
+    exit(1);
+  }
+  
+  // nu/(nu+nubar) fraction
+  if( parser.OptionExists('nu-fraction') ) {
+    LOG("gevgen", pINFO) << "Reading neutrino fraction";
+    gOptNuFraction = parser.ArgAsDouble('nu-fraction');
+  } else {
+    LOG("gevgen", pFATAL)
+       << "Unspecified neutrino fraction - Exiting";
+    PrintSyntax();
+    exit(1);
+  }
+  
+  // power law index for flux (gamma)
+  if( parser.OptionExists('gamma') ) {
+    LOG("gevgen", pINFO) << "Reading flux power law index";
+    gOptPowerLawIndex = parser.ArgAsDouble('gamma');
+  } else {
+    LOG("gevgen", pFATAL)
+       << "Unspecified flux power law index - Exiting";
+    PrintSyntax();
+    exit(1);
+  }
 
+  // force SingleProbScale?
+  if( parser.OptionExists('force-singleprob-scale') ) {
+    LOG("gevgen", pINFO) << "Forcing single probability scale";
+    gOptSingleProbScale = true;
+  } else {
+    LOG("gevgen", pINFO)
+       << "NOT forcing single probability scale";
+    gOptSingleProbScale = false;
+  }
+
+  // calculate GENIE Systematic weights?
+  if( parser.OptionExists('enable-syst-weights') ) {
+    LOG("gevgen", pINFO) << "GENIE systematic weights will be calculated";
+    gOptSystWeights = true;
+  } else {
+    LOG("gevgen", pINFO)
+       << "GENIE systematic weights will NOT be calculated";
+    gOptSystWeights = false;
+  }  
+  
   // random number seed
   if( parser.OptionExists("seed") ) {
     LOG("gevgen", pINFO) << "Reading random number seed";
     gOptRanSeed = parser.ArgAsLong("seed");
   } else {
-    LOG("gevgen", pINFO) << "Unspecified random number seed - Using default";
+    LOG("gevgen", pWARN) << "Unspecified random number seed - Using default";
     gOptRanSeed = -1;
   }
 
@@ -590,7 +610,7 @@ void GetCommandLineArgs(int argc, char ** argv)
     LOG("gevgen", pINFO) << "Reading cross-section file";
     gOptInpXSecFile = parser.ArgAsString("cross-sections");
   } else {
-    LOG("gevgen", pINFO) << "Unspecified cross-section file";
+    LOG("gevgen", pWARN) << "Unspecified cross-section file";
     gOptInpXSecFile = "";
   }
 
@@ -599,9 +619,63 @@ void GetCommandLineArgs(int argc, char ** argv)
   //
   LOG("gevgen", pNOTICE) 
      << "\n" 
-     << utils::print::PrintFramedMesg("gevgen job configuration");
+     << utils::print::PrintFramedMesg("gicecubeevgen job configuration:");
+
   LOG("gevgen", pNOTICE) 
      << "MC Run Number: " << gOptRunNu;
+
+  LOG("gevgen", pNOTICE)
+     << "Output file name: " << gOptOutFileName;
+
+  LOG("gevgen", pNOTICE)
+     << "Status file name: " << gOptStatFileName;
+
+  LOG("gevgen", pNOTICE)
+     << "Number of events requested: " << gOptNevents;
+
+  LOG("gevgen", pNOTICE)                                                                        
+     << "Neutrino energy range: ["
+     << gOptNuEnergyMin << ", " << gOptNuEnergyMax << "]";
+
+  LOG("gevgen", pNOTICE)
+     << "Zenith range: ["
+     << gOptZenithMin << ", " << gOptZenithMax << "]";
+
+  LOG("gevgen", pNOTICE)
+     << "Azimuth range: ["
+     << gOptAzimuthMin << ", " << gOptAzimuthMax << "]";
+
+  LOG("gevgen", pNOTICE)
+     << "Injection radius: " << gOptCylinderRadius;
+
+  LOG("gevgen", pNOTICE)
+     << "Injection length: " << gOptCylinderLength;
+
+  LOG("gevgen", pNOTICE)
+      << "Target code (PDG) & weight fraction (in case of multiple targets): ";
+  map<int,double>::const_iterator iter;
+  for(iter = gOptTgtMix.begin(); iter != gOptTgtMix.end(); ++iter) {
+      int    tgtpdgc = iter->first;
+      double wgt     = iter->second;
+      LOG("gevgen", pNOTICE)
+          << " >> " <<  tgtpdgc << " (weight fraction = " << wgt << ")";
+  }
+
+  LOG("gevgen", pNOTICE)
+     << "Flavor: " << gOptFlavorString;
+
+  LOG("gevgen", pNOTICE)
+     << "Nu fraction: " << gOptNuFraction;
+
+  LOG("gevgen", pNOTICE)
+     << "Gamma: " << gOptPowerLawIndex;
+
+  LOG("gevgen", pNOTICE)
+     << "Force SingleProbScale: " << gOptSingleProbScale;
+
+  LOG("gevgen", pNOTICE)
+     << "Calculate GENIE systematic weights: " << gOptSystWeights;
+
   if(gOptRanSeed != -1) {
      LOG("gevgen", pNOTICE) 
        << "Random number seed: " << gOptRanSeed;
@@ -609,8 +683,7 @@ void GetCommandLineArgs(int argc, char ** argv)
      LOG("gevgen", pNOTICE) 
        << "Random number seed was not set, using default";
   }
-  LOG("gevgen", pNOTICE) 
-       << "Number of events requested: " << gOptNevents;
+
   if(gOptInpXSecFile.size() > 0) {
      LOG("gevgen", pNOTICE) 
        << "Using cross-section splines read from: " << gOptInpXSecFile;
@@ -618,29 +691,7 @@ void GetCommandLineArgs(int argc, char ** argv)
      LOG("gevgen", pNOTICE) 
        << "No input cross-section spline file";
   }
-  LOG("gevgen", pNOTICE) 
-       << "Flux: " << gOptFlux;
-  LOG("gevgen", pNOTICE) 
-       << "Generate weighted events? " << gOptWeighted;
-  if(gOptNuEnergyRange>0) {
-     LOG("gevgen", pNOTICE) 
-        << "Neutrino energy: [" 
-        << gOptNuEnergy << ", " << gOptNuEnergy+gOptNuEnergyRange << "]";
-  } else {
-     LOG("gevgen", pNOTICE) 
-        << "Neutrino energy: " << gOptNuEnergy;
-  }
-  LOG("gevgen", pNOTICE) 
-      << "Neutrino code (PDG): " << gOptNuPdgCode;
-  LOG("gevgen", pNOTICE) 
-      << "Target code (PDG) & weight fraction (in case of multiple targets): ";
-  map<int,double>::const_iterator iter;
-  for(iter = gOptTgtMix.begin(); iter != gOptTgtMix.end(); ++iter) {
-      int    tgtpdgc = iter->first;
-      double wgt     = iter->second;
-      LOG("gevgen", pNOTICE) 
-          << " >> " <<  tgtpdgc << " (weight fraction = " << wgt << ")";
-  }
+
   LOG("gevgen", pNOTICE) << "\n";
 
   LOG("gevgen", pNOTICE) << *RunOpt::Instance();
@@ -652,14 +703,20 @@ void PrintSyntax(void)
   LOG("gevgen", pNOTICE)
     << "\n\n" << "Syntax:" << "\n"
     << "\n      gevgen [-h]"
-    << "\n              [-r run#]"
-    << "\n               -n nev"
-    << "\n               -e energy (or energy range) "
-    << "\n               -p neutrino_pdg" 
-    << "\n               -t target_pdg "
-    << "\n              [-f flux_description]"
+    << "\n              [-r run number]"
     << "\n              [-o outfile_name]"
-    << "\n              [-w]"
+    << "\n               -n number of events"
+    << "\n               -e energy or energy range [GeV] (e.g. 100,1000) " 
+    << "\n               -t target mix (e.g. 1000080160[0.95],1000010010[0.05]) "
+    << "\n               -z zenith angle range [deg] (e.g. 0,90) "
+    << "\n               -a azimuth angle range [deg] (e.g. 0,360) "
+    << "\n               -R injection cylinder radius [m] "
+    << "\n               -L injection cylinder length [m] "
+    << "\n               --nu-type "
+    << "\n               --nu-fraction "
+    << "\n               --gamma "
+    << "\n              [--force-singleprob-scale] "
+    << "\n              [--enable-syst-weights] "
     << "\n              [--seed random_number_seed]"
     << "\n              [--cross-sections xml_file]"
     << "\n              [--event-generator-list list_name]"
@@ -669,5 +726,26 @@ void PrintSyntax(void)
     << "\n              [--mc-job-status-refresh-rate  rate]"
     << "\n              [--cache-file root_file]"
     << "\n";
+
+  // LOG("gevgen", pNOTICE)
+  //   << "\n\n" << "Syntax:" << "\n"
+  //   << "\n      gevgen [-h]"
+  //   << "\n              [-r run#]"
+  //   << "\n               -n nev"
+  //   << "\n               -e energy (or energy range) "
+  //   << "\n               -p neutrino_pdg" 
+  //   << "\n               -t target_pdg "
+  //   << "\n              [-f flux_description]"
+  //   << "\n              [-o outfile_name]"
+  //   << "\n              [-w]"
+  //   << "\n              [--seed random_number_seed]"
+  //   << "\n              [--cross-sections xml_file]"
+  //   << "\n              [--event-generator-list list_name]"
+  //   << "\n              [--message-thresholds xml_file]"
+  //   << "\n              [--unphysical-event-mask mask]"
+  //   << "\n              [--event-record-print-level level]"
+  //   << "\n              [--mc-job-status-refresh-rate  rate]"
+  //   << "\n              [--cache-file root_file]"
+  //   << "\n";
 }
 //____________________________________________________________________________

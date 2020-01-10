@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+#
+#  list of environment variables passed on by qsub:
+#    - runnum: run number
+#    - flavor: neutrino flavor
+#    - emin: minimum energy in GeV
+#    - emax: maximum energy in GeV
+#    - expon: negative of spectral flux exponent
+
+runnum_label=$runnum
+if [ $runnum -lt 10 ]; then
+    runnum_label="00000$runnum"
+elif [ $runnum -lt 100 ]; then
+    runnum_label="0000$runnum"
+elif [ $runnum -lt 1000 ]; then
+    runnum_label="000$runnum"
+elif [ $runnum -lt 10000 ]; then
+    runnum_label="00$runnum"
+elif [ $runnum -lt 100000 ]; then
+    runnum_label="0$runnum"
+fi
+
+if [ $flavor -eq 12 ]; then
+    flavor_label="nue"
+elif [ $flavor -eq -12 ]; then
+    flavor_label="anue"
+elif [ $flavor -eq 14 ]; then
+    flavor_label="num"
+elif [ $flavor -eq -14 ]; then
+    flavor_label="anum"
+elif [ $flavor -eq 16 ]; then
+    flavor_label="nut"
+elif [ $flavor -eq -16 ]; then
+    flavor_label="anut"
+else
+    echo "Unknown neutrino flavor id: $flavor"
+    exit
+fi
+
+datadir=$MYGENIE/data_prod/E-${expon}/${flavor_label}
+basename=genie_${flavor_label}_e-${expon}_er${emin}-${emax}
+
+echo "Producing file $newfname"
+
+source ~/share/setup_software.sh
+setup_i3soft
+i3_dir=/user/mdier/scratch/icecube/icesim_V02-04-00_genie
+export PYTHONPATH=$PYTHONPATH:${i3_dir}/src/hepevt-reader/lib
+
+i3_env=${i3_dir}/build/env-shell.sh
+py_script_p1=$i3_dir/src/hepevt-reader/scripts/GENIE-p1.py
+py_script_p2=$i3_dir/src/hepevt-reader/scripts/GENIE-p2.py
+py_script_p3=$i3_dir/src/hepevt-reader/scripts/GENIE-p3.py
+
+echo
+echo "Start GENIE-p1.py at " `date`
+
+$i3_env python $py_script_p1 $datadir $basename $runnum_label
+
+echo 
+echo "Finished!"
+echo "Start GENIE-p2.py at " `date`
+
+$i3_env python $py_script_p2 $datadir $basename $runnum_label
+
+echo 
+echo "Finished!"
+echo "Start GENIE-p3.py at " `date`
+
+$i3_env python $py_script_p3 $datadir $basename $runnum_label
+
+echo "Finished at "`date`
+

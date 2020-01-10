@@ -33,8 +33,8 @@ hepevt_writer: FORCE
 	$(LD) $(LDFLAGS) hepevt_writer.o $(LIBRARIES) -o hepevt_writer
 
 gicevgen: FORCE
-	$(CXX) $(CXXFLAGS) -c gICEvGen.cxx $(INCLUDES)
-	$(LD) $(LDFLAGS) gICEvGen.o $(LIBRARIES) -o gicevgen
+	$(CXX) $(CXXFLAGS) -c gIceCubeEvGen.cxx $(INCLUDES)
+	$(LD) $(LDFLAGS) gIceCubeEvGen.o $(LIBRARIES) -o gicevgen
 
 
 #################### CLEANING
