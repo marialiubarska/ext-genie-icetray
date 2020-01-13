@@ -18,8 +18,8 @@ parser.add_option("-r", "--runnumber", type="int", default=1,
                   dest="RUNNUMBER", help="The run number for this simulation, also the seed for random number simulations")
 parser.add_option("-n", "--numevents", type="int", default=100,
                   dest="NUMEVENTS", help="The number of events per run")
-# parser.add_option("-f", "--flavor", default="NuMu", 
-#                   dest="FLAVOR", help="The flavor of the neutrino produced")
+parser.add_option("-f", "--flavor", default="NuMu", 
+                  dest="FLAVOR", help="The flavor of the neutrino produced")
 # parser.add_option("", "--energy-range", default="P", 
 #                   dest="ENERGYRANGE", help = "A=lowest, B=medium, C=high, P=production")
 # python step_1_genie.py -o ~/scratch/simulation/L2/test_alex.i3.gz -s 4332 -r 1 -n 1000 -f NuMu
@@ -49,12 +49,12 @@ tray = I3Tray()
 # Random number generator
 randomService = phys_services.I3SPRNGRandomService(
         seed = options.RUNNUMBER, # +10 for files, which want to fail anyway (usually 1 file per a couple of thousands)
-        nstreams = 5,
+        nstreams = 100,
         streamnum = options.FILENR)
 
 
 tray.AddModule("I3InfiniteSource","streams",
-	       Stream=icetray.I3Frame.DAQ)  #Physics)
+	       Stream=icetray.I3Frame.DAQ)
 
 tray.AddModule("I3MCEventHeaderGenerator","gen_header",
 	       Year=2009,
@@ -92,10 +92,11 @@ tray.AddModule("Dump", "ShowMeTheMoney0")
 
 from hepevt_file_reader import HEPEvtFileReaderModule
 
-tray.AddModule(HEPEvtFileReaderModule,"hepevt-reader")(
-        ("Filename",infile_gz),
-        ("AttachAllToLepton",True),
-        ("AddHadronic",False)
+tray.AddModule(HEPEvtFileReaderModule,"hepevt-reader",
+        Filename=infile_gz,
+        AttachAllToLepton=True,
+        AddHadronic=False,
+        MomentumThreshold=100.*I3Units.keV
         )
 
 # Set up the Driving Time
@@ -106,10 +107,10 @@ def DrivingTime( frame ):
 		del frame["DrivingTime"]
 	frame.Put("DrivingTime", time )
 def NEvents( frame ):
-    if "NEvPerFile" in frame:
-        del frame['NEvPerFile']
-    frame.Put('NEvPerFile', icetray.I3Int(options.NUMEVENTS))
-
+        if "NEvPerFile" in frame:
+                del frame['NEvPerFile']
+        frame.Put('NEvPerFile', icetray.I3Int(options.NUMEVENTS))
+    
 tray.AddModule(DrivingTime, "dt",
 	       Streams = [icetray.I3Frame.DAQ] )
 tray.AddModule(NEvents, "ne",
@@ -121,37 +122,35 @@ tray.AddModule(NEvents, "ne",
 #                        MCTreeName="I3MCTree_preprop", WeightDictName="I3MCWeightDict_GENIE"
 # 			)	
 
-# if 'NuMu' == 'NuMu':
-#     ### ADDING PROPAGATOR ###
-# 	tray.AddModule("I3GENIEResultDictToMCTree", "toMcTree", 
-# 			MCTreeName = "I3MCTree_preprop", WeightDictName="I3MCWeightDict_GENIE")	
+if options.FLAVOR == 'NuMu':
+    ### ADDING PROPAGATOR ###
+	# tray.AddModule("I3GENIEResultDictToMCTree", "toMcTree", 
+	# 		MCTreeName = "I3MCTree_preprop", WeightDictName="I3MCWeightDict_GENIE")	
 
-# 	# tray.AddModule("Rename", 
-# 	# 		Keys = ["I3MCTree","I3MCTree_preprop"])	
-# 	from icecube import PROPOSAL, sim_services
-# 	propagators = sim_services.I3ParticleTypePropagatorServiceMap()
+	from icecube import PROPOSAL, sim_services
+	propagators = sim_services.I3ParticleTypePropagatorServiceMap()
 	
-# 	mediadef=expandvars('$I3_BUILD/PROPOSAL/resources/mediadef')
+	mediadef=expandvars('$I3_BUILD/PROPOSAL/resources/mediadef')
 	
-# 	muMinusPropagator = PROPOSAL.I3PropagatorServicePROPOSAL(
-# 			mediadef=mediadef,
-# 			cylinderRadius=1200,
-# 			cylinderHeight=1700,
-# 			type=dataclasses.I3Particle.ParticleType.MuMinus)
-# 	muPlusPropagator = PROPOSAL.I3PropagatorServicePROPOSAL(
-# 			mediadef=mediadef,
-# 			cylinderRadius=1200,
-# 			cylinderHeight=1700,
-# 			type=dataclasses.I3Particle.ParticleType.MuPlus)
+	muMinusPropagator = PROPOSAL.I3PropagatorServicePROPOSAL(
+			mediadef=mediadef,
+			cylinderRadius=1200,
+			cylinderHeight=1700,
+			type=dataclasses.I3Particle.ParticleType.MuMinus)
+	muPlusPropagator = PROPOSAL.I3PropagatorServicePROPOSAL(
+			mediadef=mediadef,
+			cylinderRadius=1200,
+			cylinderHeight=1700,
+			type=dataclasses.I3Particle.ParticleType.MuPlus)
 		
-# 	propagators[dataclasses.I3Particle.ParticleType.MuMinus] = muMinusPropagator
-# 	propagators[dataclasses.I3Particle.ParticleType.MuPlus] = muPlusPropagator
-# 	tray.AddModule('I3PropagatorModule', 'muon_propagator',
-# 			PropagatorServices=propagators,
-# 			RandomService=randomService,
-# 			InputMCTreeName="I3MCTree_preprop",
-# #			OutputMCTreeName="I3MCTree)
-#                        OutputMCTreeName="I3MCTree_postprop")	
+	propagators[dataclasses.I3Particle.ParticleType.MuMinus] = muMinusPropagator
+	propagators[dataclasses.I3Particle.ParticleType.MuPlus] = muPlusPropagator
+	tray.AddModule('I3PropagatorModule', 'muon_propagator',
+			PropagatorServices=propagators,
+			RandomService=randomService,
+			InputMCTreeName="I3MCTree",
+#			OutputMCTreeName="I3MCTree)
+                       OutputMCTreeName="I3MCTree")	
 
 #######
 ### Testing: split and pass to root file for checks

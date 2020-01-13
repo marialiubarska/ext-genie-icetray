@@ -456,6 +456,8 @@ void GetCommandLineArgs(int argc, char ** argv)
        gOptZenithMin = atof(zen.c_str());
        gOptZenithMax = gOptZenithMin;
     }
+    gOptZenithMin = gOptZenithMin/180.0*3.1415926;
+    gOptZenithMax = gOptZenithMax/180.0*3.1415926;
   } else {
     LOG("gevgen", pFATAL) << "Unspecified zenith range - Exiting";
     PrintSyntax();
@@ -481,6 +483,8 @@ void GetCommandLineArgs(int argc, char ** argv)
        gOptAzimuthMin = atof(az.c_str());
        gOptAzimuthMax = gOptAzimuthMin;
     }
+    gOptAzimuthMin = gOptAzimuthMin/180.0*3.1415926;
+    gOptAzimuthMax = gOptAzimuthMax/180.0*3.1415926;
   } else {
     LOG("gevgen", pFATAL) << "Unspecified azimuth range - Exiting";
     PrintSyntax();
