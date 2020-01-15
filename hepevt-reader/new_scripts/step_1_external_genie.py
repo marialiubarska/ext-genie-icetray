@@ -12,6 +12,8 @@ parser.add_option("-i", "--infile",default="",
                   dest="INFILE", help="Input file from external genie gen. (in .hepevt format)")
 parser.add_option("-o", "--outfile",default="test_genie.i3",
                   dest="OUTFILE", help="Write output to OUTFILE (.i3{.gz} format)")
+parser.add_option("-w", "--wghtfile",default="",
+                  dest="WGHTFILE", help="WeightDict input .dat file")
 parser.add_option("-l", "--filenr",type="int",default=1,
                    dest="FILENR", help="File number, stream of I3SPRNGRandomService")
 parser.add_option("-r", "--runnumber", type="int", default=1,
@@ -91,14 +93,19 @@ tray.AddModule("Dump", "ShowMeTheMoney0")
 #     dataclasses.I3Position(40,-50,-40))
 
 from hepevt_file_reader import HEPEvtFileReaderModule
+from weightdict_file_reader import WDictFileReaderModule
 
 tray.AddModule(HEPEvtFileReaderModule,"hepevt-reader",
-        Filename=infile_gz,
-        AttachAllToLepton=True,
-        AddHadronic=False,
-        MomentumThreshold=100.*I3Units.keV
+        Filename = infile_gz,
+        AttachAllToLepton = True,
+        AddHadronic = False,
+        MomentumThreshold = 100.*I3Units.keV
         )
 
+tray.AddModule(WDictFileReaderModule,"wghtdict-reader",
+               Filename = options.WGHTFILE
+               )
+               
 # Set up the Driving Time
 time = dataclasses.I3Time()
 time.set_mod_julian_time(55697, 0, 0)

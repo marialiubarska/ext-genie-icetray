@@ -39,7 +39,7 @@ class WDictFileReaderModule(icetray.I3Module):
             self.f = open(self.filename, 'r')
 
 
-    def Physics(self, frame):
+    def DAQ(self, frame):  #Physics
         
          ###
         # Read a line from the file
