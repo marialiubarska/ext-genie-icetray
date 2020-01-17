@@ -11,3 +11,6 @@ export PATH=$PATH:$ROOTSYS/bin:$GENIE/bin:$LHAPDF/bin
 
 export MYGENIE=/home/mliubar/Software/genie_workspace/genie-generator
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MYGENIE/lib
+
+export PYTHONPATH=$PYTHONPATH:/home/mliubar/Software/genie_workspace/hepevt-reader/lib
+i3env=~/my_icetray_Wcut0/full_build/env-shell.sh

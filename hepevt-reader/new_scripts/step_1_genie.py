@@ -137,9 +137,9 @@ tray.AddModule("I3GENIEGenerator","genie_generator",
     RandomService = randomService, 
 #    SplineFilename = expandvars("/afs/ifh.de/user/t/terliuk/lustre/fs19/group/icecube/terliuk/GENIE_splines/GENIE_water_splines_10TeV_N500.xml"),
 #    SplineFilename = expandvars("/cvmfs/icecube.opensciencegrid.org/data/genie-splines/GENIE_water_splines_10TeV_N500.xml"),
-    SplineFilename = expandvars("/home/hignight/project/hignight/genie_2_12_8_splines/GENIE_2_12_8_Water_splines.xml"),
-    SplineFilename = expandvars("/home/hignight/work/simulation/GENIE//home/hignight/work/simulation/GENIE"),
-    LHAPDFPath = expandvars("$LHAPATH"),
+#    SplineFilename = expandvars("/home/hignight/project/hignight/genie_2_12_8_splines/GENIE_2_12_8_Water_splines.xml"),
+    SplineFilename = expandvars("/home/mliubar/Software/genie_workspace/genie-generator/xsec_splines/GENIE_2_12_8_Water_splines.xml"),
+    LHAPDFPath = expandvars("$I3_BUILD/genie-icetray/resources/PDFsets"),
     NuEnergyMin = en_range[0]*I3Units.GeV, #3, 195
     NuEnergyMax = en_range[1]*I3Units.GeV,
     PowerLawIndex = spectralIndex, # E^-2.5 spectrum
@@ -156,7 +156,9 @@ tray.AddModule("I3GENIEGenerator","genie_generator",
     SystematicNames = ['MaCCRES','MaNCRES','MaCCQE','MaNCEL','MaCOHpi','AhtBY','BhtBY','CV1uBY','CV2uBY'],
     SystematicSteps = [-2,-1,1,2],
     OutputGST=True,
-    dataclasses.I3Position(40,-50,-40))
+    PositionShift=dataclasses.I3Position(46.29,-34.88,-330.0),  # Changed from dataclasses.I3Position(40,-50,-40), 
+    MCTreeName = "I3MCTree_GENIE"
+)
 
 
 # Set up the Driving Time

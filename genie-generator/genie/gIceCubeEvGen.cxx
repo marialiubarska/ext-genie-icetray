@@ -324,10 +324,11 @@ void GenerateEventsUsingFluxOrTgtMix(void)
   mcj_driver->SetUnphysEventMask(*RunOpt::Instance()->UnphysEventMask());
   mcj_driver->UseFluxDriver(flux_driver);
   mcj_driver->UseGeomAnalyzer(geom_driver);
-  mcj_driver->Configure();
+  // mcj_driver->Configure();
   mcj_driver->UseSplines();
   if(gOptSingleProbScale) 
 	mcj_driver->ForceSingleProbScale();
+  mcj_driver->Configure();
 
   // Initialize an Ntuple Writer to save GHEP records into a TTree
   NtpWriter ntpw(kDefOptNtpFormat, gOptRunNu);
@@ -846,8 +847,7 @@ void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver){
   _InjectionSurfaceR    = gOptCylinderRadius;
   _TotalDetectionLength = gOptCylinderLength;
 
-  const double areaNorm = TMath::Pi() * gOptCylinderRadius*gOptCylinderRadius;
-  _GeneratorVolume      = areaNorm * gOptCylinderLength; // V = pi*R^2*L
+  _GeneratorVolume      = gOptCylinderRadius*gOptCylinderRadius * gOptCylinderLength; // V = pi*R^2*L
 
   // LengthInVolume -- projection of [beginning of the cylinder, vertex position] line onto neutrino direction (== cylinder axis)
   const double half_l = gOptCylinderLength/2.;  // half length of cylinder
@@ -896,7 +896,7 @@ void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver){
   }
 
   // Total crosssection
-  _Crosssection = evt->XSec() / (1e-38*units::cm2);
+  _Crosssection = evt->XSec() / (1e-27*units::cm2); // [mb]
 
   // Weights
   _GENIEWeight = evt->Weight();
@@ -905,6 +905,7 @@ void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver){
   _TotalInteractionProbabilityWeight = _GENIEWeight * _GlobalProbabilityScale;
 
   // OneWeight
+  const double areaNorm = TMath::Pi() * gOptCylinderRadius*gOptCylinderRadius * 1e4; // [cm^2]
   const double solidAngle = (TMath::Cos(_MinZenith)-TMath::Cos(_MaxZenith))*(_MaxAzimuth-_MinAzimuth);
   
   double energyIntegral=0;
