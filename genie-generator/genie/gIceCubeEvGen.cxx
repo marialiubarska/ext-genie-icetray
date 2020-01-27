@@ -1,7 +1,7 @@
 //____________________________________________________________________________
 /*!
 
-\program gicecubeevgen
+\program gicevgen
 
 \required changes: - add IceCube specific flux and geometry drivers
                    - add output in GHEP format
@@ -168,7 +168,8 @@
 #include "Utils/SystemUtils.h"
 #include "Utils/CmdLnArgParser.h"
 
-
+#include "genie/ICResultDict.h"
+//#include "genie/ICWeightDictFunc.h"
 
 #ifdef __GENIE_FLUX_DRIVERS_ENABLED__
 #ifdef __GENIE_GEOM_DRIVERS_ENABLED__
@@ -188,9 +189,10 @@ using std::ostringstream;
 using namespace genie;
 using namespace genie::controls;
 
-typedef map<string,double> weightmap_t;
+//typedef map<string,double> weightmap_t;
 
 void GetCommandLineArgs (int argc, char ** argv);
+void FillCommandLineArgsDict(void);
 void Initialize         (void);
 void PrintSyntax        (void);
 
@@ -201,10 +203,10 @@ GeomAnalyzerI * GeomDriver              (void);
 GFluxI *        FluxDriver              (void);
 #endif
 
-void     ClearMCWeight(void);
-void     CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver);
-void     FillMCWeight();
-double   CalculateColumnDepth(double d);
+// void     ClearMCWeight(void);
+void     CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver, weightmap_t  optdict);
+void     FillMCWeight(void);
+// double   CalculateColumnDepth(double d);
 void     WriteMCWeightToFile(FILE* f,int ievt, EventRecord* evt, weightmap_t wdm);
 
 
@@ -236,8 +238,10 @@ bool            gOptSingleProbScale;// force single probability scale or not
 bool            gOptSystWeights;    // calculate GENIE systematic weights or not
 long int        gOptRanSeed;        // random number seed
 string          gOptInpXSecFile;    // cross-section splines
+// options map
+weightmap_t gOptDict_;
 
-// weight dict map                                                                                                   
+// weight dict map                                                                               
 weightmap_t weightdict_;
 // weight dict contents
 double  _InjectionSurfaceR                  = 0.;  // gOptCylinderRadius [m]
@@ -266,13 +270,14 @@ double   _PrimaryNeutrinoEnergy             = 0.;  // k1.Energy(); const TLorent
 double   _OneWeight                         = 0.;  // (_TotalInteractionProbability / energyFactor) * (energyIntegral * areaNorm * solidAngle); see ConvertToMCTree.cxx
 double   _NEvents                           = 0.;  // static_cast<double>( gOptNevents ) [] 
 
-// densities in g/cm^3                                                                                               
-double ICE_DENSITY=0.93;
+// densities in kg/m^3                                                                                               
+double ICE_DENSITY=0.93e3;
 
 //____________________________________________________________________________
 int main(int argc, char ** argv)
 {
   GetCommandLineArgs(argc,argv);
+  FillCommandLineArgsDict();
   Initialize();
 
   // throw on NaNs and Infs...
@@ -320,14 +325,14 @@ void GenerateEventsUsingFluxOrTgtMix(void)
 
   // Create the monte carlo job driver
   GMCJDriver * mcj_driver = new GMCJDriver;
-  mcj_driver->SetEventGeneratorList(RunOpt::Instance()->EventGeneratorList());
-  mcj_driver->SetUnphysEventMask(*RunOpt::Instance()->UnphysEventMask());
+  //  mcj_driver->SetEventGeneratorList(RunOpt::Instance()->EventGeneratorList());
+  //  mcj_driver->SetUnphysEventMask(*RunOpt::Instance()->UnphysEventMask());
   mcj_driver->UseFluxDriver(flux_driver);
   mcj_driver->UseGeomAnalyzer(geom_driver);
-  // mcj_driver->Configure();
   mcj_driver->UseSplines();
   if(gOptSingleProbScale) 
-	mcj_driver->ForceSingleProbScale();
+	mcj_driver->ForceSingleProbScale(); // do not set this if weighted events should be generated
+  mcj_driver->KeepOnThrowingFluxNeutrinos(true); // always return a neutrino
   mcj_driver->Configure();
 
   // Initialize an Ntuple Writer to save GHEP records into a TTree
@@ -366,13 +371,19 @@ void GenerateEventsUsingFluxOrTgtMix(void)
 
      LOG("gevgen", pNOTICE) << "Generated Event GHEP Record: " << *event;
 
-     CalculateMCWeight(event, mcj_driver);
+     // CalculateMCWeight(event, mcj_driver);
+     // FillMCWeight();
+
+     CalculateMCWeight(event, mcj_driver, gOptDict_);
      FillMCWeight();
      
      // add event at the output ntuple, refresh the mc job monitor & clean-up
      ntpw.AddEventRecord(ievent, event);
      mcjmonitor.Update(ievent,event);
 
+     // ntpw.AddEventRecord(ievent, event, weightdict_);
+     // mcjmonitor.Update(ievent,event, weightdict_);
+     
      WriteMCWeightToFile(wd_ofile,ievent,event,weightdict_);
      
      ievent++;
@@ -419,6 +430,36 @@ GFluxI * FluxDriver(void)
   return flux_driver;
 }
 #endif
+//____________________________________________________________________________
+//____________________________________________________________________________ 
+void FillCommandLineArgsDict(void)
+{
+  gOptDict_.clear();
+
+  // double and int input values
+  gOptDict_["RunNu"] =           static_cast<double>( gOptRunNu ); 
+  gOptDict_["Nevents"] =         static_cast<double>( gOptNevents );
+  gOptDict_["NuEnergyMin"] =     gOptNuEnergyMin;
+  gOptDict_["NuEnergyMax"] =     gOptNuEnergyMax;
+  gOptDict_["ZenithMin"] =       gOptZenithMin;
+  gOptDict_["ZenithMax"] =       gOptZenithMax;
+  gOptDict_["AzimuthMin"] =      gOptAzimuthMin;
+  gOptDict_["AzimuthMax"] =      gOptAzimuthMax;
+  gOptDict_["CylinderRadius"] =  gOptCylinderRadius;
+  gOptDict_["CylinderLength"] =  gOptCylinderLength;
+  gOptDict_["NuFraction"] =      gOptNuFraction;
+  gOptDict_["PowerLawIndex"] =   gOptPowerLawIndex;
+
+  //other input values
+  //  gOptDict_["OutFileName"] =     gOptOutFileName;
+  //  gOptDict_["StatFileName"] =    gOptStatFileName;
+  //  gOptDict_["TgtMix"] =          gOptTgtMix;
+  //  gOptDict_["FlavorString"] =    gOptFlavorStrin;  
+  //  gOptDict_["SingleProbScale"] = gOptSingleProbScale;
+  //  gOptDict_["SystWeights"] =     gOptSystWeights;
+  //  gOptDict_["RanSeed"] =         gOptRanSeed;
+  //  gOptDict_["InpXSecFile"] =     gOptInpXSecFile;
+}
 //____________________________________________________________________________
 void GetCommandLineArgs(int argc, char ** argv)
 {
@@ -474,20 +515,20 @@ void GetCommandLineArgs(int argc, char ** argv)
   // neutrino energy
   if( parser.OptionExists('e') ) {
     LOG("gevgen", pINFO) << "Reading neutrino energy";
-    string nue = parser.ArgAsString('e');
+    string lgnue = parser.ArgAsString('e');
 
     // is it just a value or a range (comma separated set of values)
-    if(nue.find(",") != string::npos) {
+    if(lgnue.find(",") != string::npos) {
        // split the comma separated list
-       vector<string> nurange = utils::str::Split(nue, ",");
-       assert(nurange.size() == 2);   
-       double emin = atof(nurange[0].c_str());
-       double emax = atof(nurange[1].c_str());
-       assert(emax>emin && emin>=0);
-       gOptNuEnergyMin = emin;
-       gOptNuEnergyMax = emax;
+       vector<string> lgerange = utils::str::Split(lgnue, ",");
+       assert(lgerange.size() == 2);   
+       double lgemin = atof(lgerange[0].c_str());
+       double lgemax = atof(lgerange[1].c_str());
+       assert(lgemax>lgemin && lgemin>=0);
+       gOptNuEnergyMin = TMath::Power(10.,lgemin);
+       gOptNuEnergyMax = TMath::Power(10.,lgemax);
     } else {
-       gOptNuEnergyMin = atof(nue.c_str());
+       gOptNuEnergyMin = TMath::Power(10.,atof(lgnue.c_str()));
        gOptNuEnergyMax = gOptNuEnergyMin;
     }
   } else {
@@ -571,7 +612,6 @@ void GetCommandLineArgs(int argc, char ** argv)
   }
 
   // target mix (their PDG codes with their corresponding weights)
-  bool using_tgtmix = false;
   if( parser.OptionExists('t') ) {
     LOG("gevgen", pINFO) << "Reading target mix";
     string stgtmix = parser.ArgAsString('t');
@@ -580,9 +620,8 @@ void GetCommandLineArgs(int argc, char ** argv)
     if(tgtmix.size()==1) {
          int    pdg = atoi(tgtmix[0].c_str());
          double wgt = 1.0;
-         gOptTgtMix.insert(map<int, double>::value_type(pdg, wgt));
+         gOptTgtMix.insert(map<int, double>::value_type(pdg, wgt*ICE_DENSITY));
     } else {
-      using_tgtmix = true;
       vector<string>::const_iterator tgtmix_iter = tgtmix.begin();
       for( ; tgtmix_iter != tgtmix.end(); ++tgtmix_iter) {
          string tgt_with_wgt = *tgtmix_iter;
@@ -596,7 +635,7 @@ void GetCommandLineArgs(int argc, char ** argv)
          double wgt = atof(tgt_with_wgt.substr(jbeg,jend).c_str());
          LOG("Main", pNOTICE)
             << "Adding to target mix: pdg = " << pdg << ", wgt = " << wgt;
-         gOptTgtMix.insert(map<int, double>::value_type(pdg, wgt));
+         gOptTgtMix.insert(map<int, double>::value_type(pdg, wgt*ICE_DENSITY));
       }//tgtmix_iter
     }//>1
 
@@ -769,7 +808,7 @@ void PrintSyntax(void)
     << "\n              [-r run number]"
     << "\n              [-o outfile_name]"
     << "\n               -n number of events"
-    << "\n               -e energy or energy range [GeV] (e.g. 100,1000) " 
+    << "\n               -e log10 of energy or energy range [log10(E/GeV)] (e.g. 1,2) " 
     << "\n               -t target mix (e.g. 1000080160[0.95],1000010010[0.05]) "
     << "\n               -z zenith angle range [deg] (e.g. 0,90) "
     << "\n               -a azimuth angle range [deg] (e.g. 0,360) "
@@ -793,13 +832,13 @@ void PrintSyntax(void)
 //____________________________________________________________________________
 // weight dict
 //____________________________________________________________________________
-void ClearMCWeight(){
-  weightdict_.clear();
-}
+// void ClearMCWeight(){
+//   weightdict_.clear();
+// }
 //____________________________________________________________________________
-void FillMCWeight(){
+void FillMCWeight(void){
 
-  ClearMCWeight();
+  weightdict_.clear();
 
   // add checks for if weights dict values were changed from initial dummy values?
 
@@ -831,26 +870,30 @@ void FillMCWeight(){
   weightdict_["NEvents"]                           = _NEvents;
 }
 //____________________________________________________________________________
-void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver){
+void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver, weightmap_t  optdict){
 
   // values taken from input
-  _NEvents              = static_cast<double>( gOptNevents );
-  _PowerLawIndex        = gOptPowerLawIndex;
-  _MinEnergyLog         = TMath::Log10(gOptNuEnergyMin);
-  _MaxEnergyLog         = TMath::Log10(gOptNuEnergyMax);
-  _MinZenith            = gOptZenithMin;
-  _MaxZenith            = gOptZenithMax;
-  _MinAzimuth           = gOptAzimuthMin;
-  _MaxAzimuth           = gOptAzimuthMax;
+  _NEvents              = optdict.find("Nevents")->second;
+  _PowerLawIndex        = optdict.find("PowerLawIndex")->second;
+
+  double minEnergy = optdict.find("NuEnergyMin")->second;
+  double maxEnergy = optdict.find("NuEnergyMax")->second;
+  _MinEnergyLog         = TMath::Log10( minEnergy );
+  _MaxEnergyLog         = TMath::Log10( maxEnergy );
+  _MinZenith            = optdict.find("ZenithMin")->second;
+  _MaxZenith            = optdict.find("ZenithMax")->second;
+  _MinAzimuth           = optdict.find("AzimuthMin")->second;
+  _MaxAzimuth           = optdict.find("AzimuthMax")->second;
   
   // geometry
-  _InjectionSurfaceR    = gOptCylinderRadius;
-  _TotalDetectionLength = gOptCylinderLength;
+  _InjectionSurfaceR    = optdict.find("CylinderRadius")->second;
+  _TotalDetectionLength = optdict.find("CylinderLength")->second;
 
-  _GeneratorVolume      = gOptCylinderRadius*gOptCylinderRadius * gOptCylinderLength; // V = pi*R^2*L
+  _GeneratorVolume      = _InjectionSurfaceR*_InjectionSurfaceR * _TotalDetectionLength * TMath::Pi();
+    //gOptCylinderRadius*gOptCylinderRadius * gOptCylinderLength; // V = pi*R^2*L
 
   // LengthInVolume -- projection of [beginning of the cylinder, vertex position] line onto neutrino direction (== cylinder axis)
-  const double half_l = gOptCylinderLength/2.;  // half length of cylinder
+  const double half_l = _TotalDetectionLength/2.;  // half length of cylinder
   
   GHepParticle * neutrino = evt->Probe();
   const TLorentzVector & k1 = *(neutrino->P4());  // v 4-p (k1)                                                                                                                                              
@@ -905,125 +948,22 @@ void CalculateMCWeight(EventRecord * evt, GMCJDriver * mcj_driver){
   _TotalInteractionProbabilityWeight = _GENIEWeight * _GlobalProbabilityScale;
 
   // OneWeight
-  const double areaNorm = TMath::Pi() * gOptCylinderRadius*gOptCylinderRadius * 1e4; // [cm^2]
+  const double areaNorm = TMath::Pi() * _InjectionSurfaceR*_InjectionSurfaceR * 1e4; // [cm^2]
   const double solidAngle = (TMath::Cos(_MinZenith)-TMath::Cos(_MaxZenith))*(_MaxAzimuth-_MinAzimuth);
   
   double energyIntegral=0;
   if (_PowerLawIndex == 1.) {
     // if E^-1 then integral over Emin and Emax is                                                                                                                                                   
-    energyIntegral = TMath::Log(gOptNuEnergyMax/gOptNuEnergyMin);
+    energyIntegral = TMath::Log(maxEnergy/minEnergy);
   } else {
     // if not E^-1 then integral over Emin and Emax is                                                                                                                                               
-    energyIntegral = (TMath::Power(gOptNuEnergyMax, (1.-_PowerLawIndex)) -
-		      TMath::Power(gOptNuEnergyMin, (1.-_PowerLawIndex))) / (1.-_PowerLawIndex);
+    energyIntegral = (TMath::Power(maxEnergy, (1.-_PowerLawIndex)) -
+		      TMath::Power(minEnergy, (1.-_PowerLawIndex))) / (1.-_PowerLawIndex);
   }
     
   const double energyFactor = TMath::Power( _PrimaryNeutrinoEnergy, -_PowerLawIndex );
 
   _OneWeight = (_TotalInteractionProbabilityWeight / energyFactor) * (energyIntegral * areaNorm * solidAngle);
-    
-  // //LOG("gicevgen", pDEBUG) << "Pointer to target nulceus: " << evt->TargetNucleus();
-  // //LOG("gicevgen", pDEBUG) << "TargetNucleus pdg: " << evt->TargetNucleus()->Pdg();
-
-  // const double genieWeight = evt->Weight();
-  // //std::cout << "GENIE weight: " << genieWeight << "\n";
-  
-  // int nupdg=evt->Probe()->Pdg();
-  // int tgtpdg=1000010010; // proton by default, pointer to target nucleus not filled if it is a proton
-  // if (evt->TargetNucleus()) tgtpdg=evt->TargetNucleus()->Pdg();
-  // const double PrimaryNeutrinoEnergy=evt->Probe()->E();
-  // // accessor returns in units of 1e-38cm2, 
-  // //  converted in mb = 1e-31 m2 = 1e-27cm2= 1e11 * 1e-38 cm2  
-  // //  const double TotalCrosssection=CrossSectionAccessor::GetMe()->GetTotalCrossSection(nupdg,tgtpdg,PrimaryNeutrinoEnergy) * 1e-11; 
-  
-  // //calculate the beginning and end position of the cylinder
-  // const double half_l = gOptGenVolLength/2; // half length of cylinder
-  // TVector3 cyl_end = evt->Probe()->P4()->Vect(); // direction of neutrino
-  // cyl_end.SetMag(half_l);                 // multiply by half length cylinder gives end point
-  // TVector3 cyl_beg = -1*cyl_end;                // the opposite point is the beginning
-  // TVector3 int_pos = evt->Vertex()->Vect(); // interaction position
-
-  // // calculate the relative position along the cylinder axis of the perpendicular projection of the
-  // // vertex onto this axis
-  // double u_min = int_pos * cyl_end;
-  // u_min /= (half_l*half_l);
-  // if (TMath::Abs(u_min)>1) 
-  //   LOG("gicevgen", pERROR) << "Vertex point outside generation cylinder - should not happen! u_min = " << u_min;
-  // const double LengthInVolume = half_l * (u_min+1);
-  // LOG("gicevgen", pDEBUG) << "LengtInVolume, u_min  " << LengthInVolume << " " << u_min;
-
-  // const double InteractionColumnDepth = CalculateColumnDepth(LengthInVolume);
-  // const double TotalColumnDepth = CalculateColumnDepth(gOptGenVolLength);
-  // LOG("gicevgen", pDEBUG) << "Column depth, total interaction  " << InteractionColumnDepth 
-  //                         << " " << TotalColumnDepth;
-
-  // double tgtmass = CrossSectionAccessor::GetMe()->GetMassInGram(tgtpdg);
-  // LOG("gicevgen", pDEBUG) << "Mass of target = " << tgtmass;
-
-  // const double exponential_factor = (TotalCrosssection * 1.0e-31) * (InteractionColumnDepth / tgtmass);
-  // const double probability        = (TotalCrosssection * 1.0e-31) * (TotalColumnDepth / tgtmass) * exp(-exponential_factor);
-
-  // LOG("gicevgen", pDEBUG) << "Total interaction probability weight = " << probability;
-
-  // double InteractionType = 0;
-  // string xsintstr="";
-  // const ProcessInfo & pci = evt->Summary()->ProcInfo();
-
-  // if (pci.IsWeakCC()) {
-  //   InteractionType=1;
-  //   xsintstr="tot_cc";
-  // }
-  // else if (pci.IsWeakNC()){
-  //   InteractionType=2;
-  //   xsintstr="tot_nc";
-  // }
-    
-  // double InteractionCrosssection = 0;
-  // if (InteractionType>0)
-  //   // convert units of 1e-38 cm2 to mb (=1e-31 m2)
-  //   InteractionCrosssection = CrossSectionAccessor::GetMe()->GetCrossSection(xsintstr.c_str(),nupdg,tgtpdg,PrimaryNeutrinoEnergy) * 1e-11;
-
-  // weightdict_["GeneratorVolume"]            = gOptGenVolRadius*gOptGenVolRadius*TMath::Pi()*gOptGenVolLength;
-  // weightdict_["TargetPDG"]                  = tgtpdg;
-  // //  weightdict_["TotalCrosssection"]          = TotalCrosssection;
-  // weightdict_["TotalInteractionProbabilityWeight"] = probability;
-  // weightdict_["InteractionColumnDepth"]     = InteractionColumnDepth;
-  // weightdict_["TotalColumnDepth"]           = TotalColumnDepth;
-  // weightdict_["TotalDetectionLength"]       = gOptGenVolLength;
-  // weightdict_["LengthInVolume"]             = LengthInVolume;
-  // weightdict_["EnergyLost"]                 = 0.0;
-
-  // weightdict_["InteractionType"]            = InteractionType;
-  // weightdict_["InteractionCrosssection"]    = InteractionCrosssection;
-  // //
-
-  // // generation area is a circle with radius InjectionSurfaceR
-  // // in cm^2 !!!! Flux is in cm^-2
-  // double areaNorm = gOptGenVolRadius*gOptGenVolRadius*TMath::Pi()*1e4;
-
-  // // generation solid angle
-  // double solidAngle = (cos(gOptNuZenithMin*TMath::DegToRad())-cos(gOptNuZenithMax*TMath::DegToRad()));
-  // solidAngle *= (gOptNuAzimuthMax*TMath::DegToRad()-gOptNuAzimuthMin*TMath::DegToRad());
-
-  // double energyIntegral=0;
-  // if (gOptPowerLawIndex == 1) {
-  //   // if E^-1 then integral over Emin and Emax is
-  //   energyIntegral = TMath::Log(1+gOptNuEnergyRange/gOptNuEnergy);
-  // } else {
-  //   // if not E^-1 then integral over Emin and Emax is
-  //   energyIntegral = (TMath::Power(gOptNuEnergy+gOptNuEnergyRange, (1.-gOptPowerLawIndex)) -
-  // 		      TMath::Power(gOptNuEnergy, (1.-gOptPowerLawIndex))) / (1.-gOptPowerLawIndex);
-  // }
-
-  // //power law index is probabaly 1 indicating a spectrum generated at E^-1
-  // double energyFactor = TMath::Power( PrimaryNeutrinoEnergy , -gOptPowerLawIndex );
-
-  // // OneWeight
-  // double OneWeight = (probability / energyFactor) * (energyIntegral * areaNorm * solidAngle);
-
-  // weightdict_["PrimaryNeutrinoEnergy"] = PrimaryNeutrinoEnergy;
-  // weightdict_["OneWeight"] = OneWeight;
-  // weightdict_["NEvents"] = gOptNevents;
 
 }
 //____________________________________________________________________________
@@ -1033,18 +973,18 @@ double CalculateColumnDepth(double length)
   return coldepth*1e6;
 }
 //____________________________________________________________________________
-void WriteMCWeightToFile(FILE* ofile,int ievt, EventRecord* evt, weightmap_t  wdm)
+void WriteMCWeightToFile(FILE* ofile,int ievt, EventRecord* evt, weightmap_t  wdict)
 {
   // first line in the event is the event number, the number of elements in the weightdict,                          
   // the # entries in the event tree, the pdg of incoming neutrino and the energy                                    
   // the last three are used for consistency checks with the hepevt file                                             
-  unsigned int len_wdm = wdm.size();
+  unsigned int len_wdict = wdict.size();
 
-  fprintf(ofile,"%d %u %d %d %e \n",ievt,len_wdm,evt->GetEntriesFast(),evt->Probe()->Pdg(),evt->Probe()->E());
+  fprintf(ofile,"%d %u %d %d %e \n",ievt,len_wdict,evt->GetEntriesFast(),evt->Probe()->Pdg(),evt->Probe()->E());
 
   // now print all the members of the weightdict map                                                                 
   weightmap_t::iterator it;
-  for (it=wdm.begin(); it != wdm.end(); it++){
+  for (it=wdict.begin(); it != wdict.end(); it++){
     fprintf(ofile,"    %s %.9e \n",(*it).first.c_str(),(*it).second);
   }
 }
